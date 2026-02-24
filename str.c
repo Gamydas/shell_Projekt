@@ -64,7 +64,7 @@ void tlc(char* Text)
 /// @param first 
 /// @param second 
 /// @return returns 1 if both strings are identical, 0 otherwise
-int strcomp(char* first, char* second)
+int nstrcomp(char* first, char* second)
 {
     int i = 0;
     tlc(first);                                            // converts first to lowercase
@@ -85,11 +85,34 @@ int strcomp(char* first, char* second)
     return 1;
 }
 
+/// @brief case-sensitvely compares 2 strings 
+/// @param first 
+/// @param second 
+/// @return returns 1 if both strings are identical, 0 otherwise
+int strcomp(char* first, char* second)
+{
+    int i = 0;
+    while(*(first + i) && *(second + i))
+    {
+        if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
+        {
+            return 0;
+        }
+        i++;
+    }
+
+    if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical 
+    {
+        return 0;
+    }
+    return 1;
+}
+
 /// @brief function seperates a string into segments which are indicated by spaces
 /// @param Text string to be seperated into segments
 /// @param arr  array in which the segments are to be stored, first dimension for indices second for the parts of the string
 /// @return returns 1 if segmentation was unsuccessful, 0 otherwise
-int sepStr(char* Text, char** arr)
+int parseStr(char* Text, char** arr)
 {
     int i = 0;                                             // index variable
     int arri = 0;                                          // array index variable
@@ -127,6 +150,8 @@ int sepStr(char* Text, char** arr)
     {
         return 1;                                               // error occured while segmenting the string
     }
+    arri++;
+    arr[arri] = '\0';                                          // marks end of instruction array
     return 0;
 }
 

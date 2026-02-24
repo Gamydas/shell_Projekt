@@ -1,5 +1,6 @@
-void strcopy(char*, char*);
+void strcopy(char* origin, char* destination);
+int nstrcomp(char*, char*);
 int strcomp(char*, char*);
 void tlc(char*);
-int sepStr(char*, char**);
+int parseStr(char*, char**);
 int strcopySeg(char*, char*, int, int);
