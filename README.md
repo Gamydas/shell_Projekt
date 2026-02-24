@@ -1,5 +1,13 @@
-In this project I am trying to create my own UNIX Shell. I will update this at a later point with a little roadmap.
-Currently implemented commands:
-cd
-pwd
-preinstalled Linux commands i.e ls
+In this project I am trying to create my own UNIX Shell.
+
+Currently implemented commands: 
+- cd
+- pwd
+- preinstalled Linux programs i.e ls, wc, vim etc.
+
+To do:
+- echo command
+- type command
+- Redirection of output
+- Completition via TAB
+
