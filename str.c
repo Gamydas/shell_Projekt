@@ -17,14 +17,14 @@ void strcopy(char* origin, char* dest)
 /// @brief function copies a segment of origin into dest
 /// @param origin original message that is to be copied
 /// @param dest destination of the copy command
-/// @return returns 0 if successful and 1 if there was a problem i.e. end was greater than the actual remaining string size
+/// @return returns 0 if successful and -1 if there was a problem i.e. end was greater than the actual remaining string size
 int strcopySeg(char* origin, char* dest, int start, int end)
 {
     // checking if an interval is valid or not
     if(start > end)                                           
         {
             *dest = '\0';
-            return 1;
+            return -1;
         }
 
     while (*(origin + start) && start <= end)                                    // runs to the end of either the string or interval
@@ -37,7 +37,7 @@ int strcopySeg(char* origin, char* dest, int start, int end)
     if(start - 1 != end)                                                        // -1 to consider the difference caused by the last loop iteration 
     {
         *dest = '\0';
-        return 1;
+        return -1;
     }
 
     *dest = '\0';
@@ -63,7 +63,7 @@ void tlc(char* Text)
 /// @brief case-insensitvely compares 2 strings 
 /// @param first 
 /// @param second 
-/// @return returns 1 if both strings are identical, 0 otherwise
+/// @return returns 0 if both strings are identical, -1 otherwise
 int nstrcomp(char* first, char* second)
 {
     int i = 0;
@@ -73,22 +73,22 @@ int nstrcomp(char* first, char* second)
     {
         if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
         {
-            return 0;
+            return -1;
         }
         i++;
     }
 
     if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical 
     {
-        return 0;
+        return -1;
     }
-    return 1;
+    return 0;
 }
 
 /// @brief case-sensitvely compares 2 strings 
 /// @param first 
 /// @param second 
-/// @return returns 1 if both strings are identical, 0 otherwise
+/// @return returns 0 if both strings are identical, -1 otherwise
 int strcomp(char* first, char* second)
 {
     int i = 0;
@@ -96,22 +96,22 @@ int strcomp(char* first, char* second)
     {
         if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
         {
-            return 0;
+            return -1;
         }
         i++;
     }
 
     if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical 
     {
-        return 0;
+        return -1;
     }
-    return 1;
+    return 0;
 }
 
 /// @brief function seperates a string into segments which are indicated by spaces
 /// @param Text string to be seperated into segments
 /// @param arr  array in which the segments are to be stored, first dimension for indices second for the parts of the string
-/// @return returns 1 if segmentation was unsuccessful, 0 otherwise
+/// @return returns 0 if parsing was successful, -1 otherwise
 int parseStr(char* Text, char** arr)
 {
     int i = 0;                                             // index variable
@@ -134,7 +134,7 @@ int parseStr(char* Text, char** arr)
 
             if((strcopySeg(Text, arr[arri], temp, i - 1)))      // i - 1 so the space does not get copied aswell
             {
-                return 1;                                       // error occured while segmenting the string
+                return -1;                                       // error occured while segmenting the string
             }
             arri++;
             while (*(Text + i) == 32)                          // clears out the remaining spaces 
@@ -148,7 +148,7 @@ int parseStr(char* Text, char** arr)
 
     if((strcopySeg(Text, arr[arri], temp, i - 1)))              // i - 1 so the nullterminator does not get copied aswell
     {
-        return 1;                                               // error occured while segmenting the string
+        return -1;                                               // error occured while segmenting the string
     }
     arri++;
     arr[arri] = NULL;                                          // marks end of instruction array
