@@ -107,7 +107,34 @@ int strcomp(char* first, char* second)
     }
     return 0;
 }
+/* function has been retired(I found a way simpler solution)
+/// @brief specific niche function to make my life easier redirecting filestreams
+/// @param first 
+/// @param second 
+/// @param flag flag to be changed
+/// @param number number that will be assigned to flag in case comparison is succesful
+/// @return returns 0 if both strings are identical, -1 otherwise
+int flagstrcomp(char* first, char* second, int* flag, int number)
+{
+    int i = 0;
+    while(*(first + i) && *(second + i))
+    {
+        if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
+        {
+            return -1;
+        }
+        i++;
+    }
 
+    if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical 
+    {
+        return -1;
+    }
+    //checking which flag is eligable
+        *flag = number;
+    return 0;
+}
+*/
 /// @brief function seperates a string into segments which are indicated by spaces
 /// @param Text string to be seperated into segments
 /// @param arr  array in which the segments are to be stored, first dimension for indices second for the parts of the string
