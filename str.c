@@ -151,7 +151,7 @@ int parseStr(char* Text, char** arr)
         return 1;                                               // error occured while segmenting the string
     }
     arri++;
-    arr[arri] = '\0';                                          // marks end of instruction array
+    arr[arri] = NULL;                                          // marks end of instruction array
     return 0;
 }
 
