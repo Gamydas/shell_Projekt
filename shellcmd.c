@@ -5,6 +5,15 @@
 
 void cd(char* dir)
 {
+    if(strcomp(dir,"~") == 0)
+    {
+        dir = getenv("HOME");
+        if(dir == NULL)
+        {
+            fprintf(stderr,"failed to fetch path to home directory\n");
+            return;
+        }
+    }
     // if chdir failed i.e dir doesnt exist
     if(chdir(dir) == -1)
     {
