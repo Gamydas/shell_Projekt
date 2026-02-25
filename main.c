@@ -14,12 +14,6 @@ int main(int argc, char *argv[])
     char cmd[200];                     // string for user command
     char* instruc[50];                 // array of strings for seperate instructions within the command
     char buffer[50][50];              // memory to assign to instruc, might be changed for dynamic memory in the future
-
-    // Initializing instruc
-    for (int i = 0; i < 50; i++)
-    {
-        instruc[i] = buffer[i];
-    }
     
 
     /*printf("You have entered %d arguments:\n", argc);
@@ -32,7 +26,11 @@ int main(int argc, char *argv[])
     HOME;
     while(1)
     {
-        
+        // Initializing instruc 
+        for (int i = 0; i < 50; i++)
+        {
+            instruc[i] = buffer[i];
+        }
         // loading the current directory into it wdir string
        
         getcwd(wdir, sizeof(wdir));
@@ -60,14 +58,15 @@ int main(int argc, char *argv[])
         
         if( (strcomp(instruc[0], "cd")) )
         {
-            printf("chose cd cmd\n");
+            //printf("chose cd cmd\n");
             cd(instruc[1]);
         } else if( (strcomp(instruc[0], "pwd")) )
         {
-            printf("chose pwd cmd\n");
+            
             pwd();
-        } else  // not an implemented command
+        } else  // not a buildt-in
         {
+            
             int rc = fork();
             if(rc < 0 ) // incase fork fails to execute
             {
@@ -77,15 +76,13 @@ int main(int argc, char *argv[])
             if(rc == 0)   // child
             {
                 execvp(instruc[0], instruc);
+                exit(1);  // in case exec fails
             } else       // parent
             {
                 wait(0); // waits till child dies 
             }
-
-
         }
         
-
     }
     return 0;
 }
