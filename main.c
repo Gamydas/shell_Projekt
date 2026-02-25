@@ -31,23 +31,31 @@ int main(int argc, char *argv[])
         {
             instruc[i] = buffer[i];
         }
+
         // loading the current directory into it wdir string
-       
         getcwd(wdir, sizeof(wdir));
 
         // loading the user command into cmd string    
         getInput(wdir,cmd);
 
-        // exits the main loop if command is given
         char* temp = malloc(sizeof(char) * 200);
-        strcopy(cmd, temp);                                 // due to strcomp turning cmd fully lower case a copy of cmd is needed 
-        if(strcomp(temp,"exit")){                           // causes cmd to be lower case even if cmd wasnt exit, needs to be fixed
+        // due to strcomp turning cmd fully lower case a copy of cmd is needed 
+        strcopy(cmd, temp);   
+             
+        // exits the main loop if command is given                           
+        if(nstrcomp(temp,"exit") == 0){                           
+            free(temp);
             return 0;
         }
         free(temp);
+
+
         // seperating the command String into the seperate instructions
-        parseStr(cmd,instruc);
-        
+        if(parseStr(cmd,instruc) == -1)
+        {
+            fprintf(stderr, "\nerror parsing command\n");
+            continue;
+        }
         
         /*  Test loop to print parsed String
         for (int i = 0; i < 50; i++)
@@ -56,32 +64,34 @@ int main(int argc, char *argv[])
         }
         */
         
-        if( (strcomp(instruc[0], "cd")) )
+        if ( (strcomp(instruc[0], "cd")) == 0 )
         {
-            //printf("chose cd cmd\n");
             cd(instruc[1]);
-        } else if( (strcomp(instruc[0], "pwd")) )
+        } else if ( (strcomp(instruc[0], "pwd")) == 0 )
         {
-            
             pwd();
+        } else if ( (strcomp(instruc[0], "type")) == 0 )
+        {
+            type (instruc[1]);
         } else  // not a buildt-in
         {
-            
             int rc = fork();
-            if(rc < 0 ) // incase fork fails to execute
+            if (rc < 0 )                                               // incase fork fails to execute
             {
                 printf("fork failed\n");
-                exit(1);
+                continue;
             }
-            if(rc == 0)   // child
+            // child
+            if (rc == 0)                                               
             {
                 execvp(instruc[0], instruc);
-                exit(1);  // in case exec fails
-            } else       // parent
+                fprintf(stderr,"%s: not a command\n",instruc[0]);      // if execvp cannot find the given command
+                continue;                                               // in case exec fails
+            } else // parent
             {
-                wait(0); // waits till child dies 
+                wait(0);                                               // waits till child dies 
             }
-        }
+        } 
         
     }
     return 0;
