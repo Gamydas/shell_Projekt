@@ -63,6 +63,11 @@ int main(int argc, char *argv[])
             printf("Instruct #%i = %s\n", i, buffer[i]);
         }
         */
+        // checking for redirection operators
+        if (redirect(instruc) == 0)
+        {
+            continue;
+        }
         
         if ( (strcomp(instruc[0], "cd")) == 0 )
         {
