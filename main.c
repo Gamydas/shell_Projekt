@@ -38,17 +38,12 @@ int main(int argc, char *argv[])
         // loading the user command into cmd string    
         getInput(wdir,cmd);
 
-        char* temp = malloc(sizeof(char) * 200);
-        // due to strcomp turning cmd fully lower case a copy of cmd is needed 
-        strcopy(cmd, temp);   
-             
+    
         // exits the main loop if command is given                           
-        if(nstrcomp(temp,"exit") == 0){                           
-            free(temp);
+        if(nstrcomp(cmd,"exit") == 0){                           
             return 0;
         }
-        free(temp);
-
+        
 
         // seperating the command String into the seperate instructions
         if(parseStr(cmd,instruc) == -1)

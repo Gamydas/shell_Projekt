@@ -67,18 +67,22 @@ void tlc(char* Text)
 int nstrcomp(char* first, char* second)
 {
     int i = 0;
-    tlc(first);                                            // converts first to lowercase
-    tlc(second);                                           // converts second to lowercase
-    while(*(first + i) && *(second + i))
+    char temp[200];
+    char temp2[200];
+    strcopy(first,temp);
+    strcopy(first,temp2);
+    tlc(temp);                                            // converts first to lowercase
+    tlc(temp2);                                           // converts second to lowercase
+    while(*(temp + i) && *(temp2 + i))
     {
-        if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
+        if(*(temp + i) != *(temp2 + i))                  // checks if first and second are identical char by char
         {
             return -1;
         }
         i++;
     }
 
-    if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical 
+    if(*(temp + i) != *(temp2 + i))                      // checks if one of the strings was shorter and thus not identical 
     {
         return -1;
     }
