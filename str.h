@@ -7,4 +7,6 @@ int strcomp(char*, char*);
 void tlc(char*);
 int parseStr(char*, char**);
 int strcopySeg(char*, char*, int, int);
+void findPrefix(char arr[][256], char* prefix, int width, int length);
+int strLen(char* text);
 #endif
