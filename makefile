@@ -1,28 +1,20 @@
 CC = gcc 
 PRG = shell
-OBJ = main.o input.o str.o shellcmd.o tools.o
+OBJ = main.o input.o str.o shellcmd.o tools.o circBuff.o
 
 
 $(PRG): $(OBJ)
 	$(CC) -o $(PRG) $(OBJ)
 
-main.o: main.c
-	$(CC) -c main.c
+shell_debug: CFLAGS = -g -O0
+shell_debug: $(OBJ)
+	$(CC) -o $(PRG)_debug $(OBJ)
 
-input.o: input.c
-	$(CC) -c input.c
-
-str.o: str.c
-	$(CC) -c str.c
-
-shellcmd.o: shellcmd.c
-	$(CC) -c shellcmd.c
-
-tools.o: tools.c
-	$(CC) -c tools.c
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(PRG)
+	rm -f $(OBJ) $(PRG) $(PRG)_debug
 
 run:
 	./$(PRG)
