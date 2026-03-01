@@ -9,6 +9,7 @@
 #include "str.h"
 #include "shellcmd.h"
 #include "escapesequenzen.h"
+#include "circBuff.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +27,7 @@ int main(int argc, char *argv[])
    
     */
     shell myShell;
+    initializeCircBuf(&myShell.history);
     tcgetattr(0, &myShell.canon);
     tcgetattr(0, &myShell.raw);
     myShell.raw.c_iflag &= ~(IXON);
