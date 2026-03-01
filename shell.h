@@ -1,16 +1,8 @@
 #include <termios.h>
 #include <unistd.h>
+#include "circBuff.h"
 #ifndef SHELL_H
 #define SHELL_H
-
-typedef struct
-{
-    // dim 1 is the index dim 2 is the saved string
-    char buf[50][50];
-    int head;
-    int tail;
-} charCircBuff;
-
 
 typedef struct
 {
