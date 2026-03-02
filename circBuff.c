@@ -71,7 +71,7 @@ void fetchLatest(charCircBuff *bufr, char *dest)
     {
         bufr->latest = &bufr->buf[49]; // wraps around buffer
     }
-    else if((bufr->latest <= bufr->head))
+    else 
     {
         bufr->latest -= 1;
     }
