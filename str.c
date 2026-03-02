@@ -229,3 +229,18 @@ int strLen(char* text)
     }
     return i;
 }
+
+/// @brief deletes a char in a string and connects the two ends together
+/// @param text 
+/// @param idx index at which character is to be deleted
+void delInStr(char* text, int idx)
+{
+    
+    while (*(text + idx + 1))
+    {
+        *(text + idx) = *(text + idx + 1);
+        idx++;
+    }
+    *(text + idx) = '\0';
+    
+}
