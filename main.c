@@ -9,12 +9,12 @@
 #include "str.h"
 #include "shellcmd.h"
 #include "escapesequenzen.h"
-#include "circBuff.h"
+#include "list.h"
 
 int main(int argc, char *argv[])
 {
     /*
-    char wdir[2048];                   // string for working directory 
+    char wdir[2048];                   // string for working directory
     char cmd[200];                     // string for user command
     char* instruc[50];                 // array of strings for seperate instructions within the command
     char buffer[50][50];              // memory to assign to instruc, might be changed for dynamic memory in the future
@@ -24,22 +24,21 @@ int main(int argc, char *argv[])
     tcgetattr(0, &canon);
     tcgetattr(0, &raw);
 
-   
+
     */
     shell myShell;
-    initializeCircBuf(&myShell.history);
+    myShell.latest = 0;
+    initList(&myShell.history);
     tcgetattr(0, &myShell.canon);
     tcgetattr(0, &myShell.raw);
     myShell.raw.c_iflag &= ~(IXON);
     myShell.raw.c_lflag &= ~(ECHO | ICANON | IEXTEN);
 
-
-    
     CLEAR;
     HOME;
-    while(1)
+    while (1)
     {
-        // Initializing instruc 
+        // Initializing instruc
         for (int i = 0; i < 50; i++)
         {
             myShell.instruc[i] = myShell.buffer[i];
@@ -48,23 +47,16 @@ int main(int argc, char *argv[])
         // loading the current directory into it wdir string
         getcwd(myShell.wdir, sizeof(myShell.wdir));
 
-        // loading the user command into cmd string    
+        // loading the user command into cmd string
         getInput(&myShell);
 
-    
-        // exits the main loop if command is given                           
-        if(nstrcomp(myShell.cmd,"exit") == 0){                           
-            return 0;
-        }
-        
-
         // seperating the command String into the seperate instructions
-        if(parseStr(myShell.cmd,myShell.instruc) == -1)
+        if (parseStr(myShell.cmd, myShell.instruc) == -1)
         {
-            fprintf(stderr, "\nerror parsing command\n");
+            fprintf(stderr, "error parsing command\n");
             continue;
         }
-        
+
         /*  Test loop to print parsed String
         for (int i = 0; i < 50; i++)
         {
@@ -77,36 +69,43 @@ int main(int argc, char *argv[])
             continue;
         }
         
-        if ( (strcomp(myShell.instruc[0], "cd")) == 0 )
+        // exits main function
+        if (strcomp(myShell.cmd, "exit") == 0)
+        {
+            freeList(&myShell.history);
+            return 0;
+        }
+        if ((strcomp(myShell.instruc[0], "cd")) == 0)
         {
             cd(myShell.instruc[1]);
-        } else if ( (strcomp(myShell.instruc[0], "pwd")) == 0 )
+        }
+        else if ((strcomp(myShell.instruc[0], "pwd")) == 0)
         {
             pwd();
-        } else if ( (strcomp(myShell.instruc[0], "type")) == 0 )
+        }
+        else if ((strcomp(myShell.instruc[0], "type")) == 0)
         {
-            type (myShell.instruc[1]);
-        } else  // not a buildt-in
+            type(myShell.instruc[1]);
+        }
+        else // not a buildt-in
         {
             int rc = fork();
-            if (rc < 0 )                                               // incase fork fails to execute
+            if (rc < 0) // incase fork fails to execute
             {
-                printf("fork failed\n");
+                fprintf(stderr, "fork failed\n");
                 continue;
             }
             // child
-            if (rc == 0)                                               
+            if (rc == 0)
             {
                 execvp(myShell.instruc[0], myShell.instruc);
-                fprintf(stderr,"%s: not a command\n",myShell.instruc[0]);      // if execvp cannot find the given command
-                continue;                                               // in case exec fails
-            } else // parent
-            {
-                wait(0);                                               // waits till child dies 
+                fprintf(stderr, "%s: not a command\n", myShell.instruc[0]); // if execvp cannot find the given command
+                exit(1);                                                    // in case exec fails
             }
-        } 
-        
+            else // parent
+            {
+                wait(0); // waits till child dies
+            }
+        }
     }
-
-    
 }
