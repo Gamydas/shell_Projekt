@@ -4,7 +4,8 @@
 #include "shell.h"
 #include "str.h"
 #include "escapesequenzen.h"
-#include "circBuff.h"
+#include "list.h"
+#include "shellcmd.h"
 
 /// @brief support function which gets passed a shell struc and looks through present directories and looks for either complete or partial matches,
 ///        which will then be saved to the twins array(later the entire array will be printed out on a double press of TAB)
@@ -70,11 +71,11 @@ void tabComplete(shell *sh)
 void handleArrows(shell *sh)
 {
 
-    charCircBuff *hist = &sh->history;
+    list *hist = &sh->history;
     char c;
     read(0, &c, 1);
-    //printf("read 1: %c\n", c);
-    //fflush(stdout);
+    // printf("read 1: %c\n", c);
+    // fflush(stdout);
     if (c != '[')
     {
         return;
@@ -82,28 +83,65 @@ void handleArrows(shell *sh)
     else
     {
         read(0, &c, 1);
-        //printf("read 2: %c\n", c);
-        //fflush(stdout);
+        // printf("read 2: %c\n", c);
+        // fflush(stdout);
         switch (c)
         {
         case 'A':
-            tempadd2Buf(hist, sh->cmd);  // remember currently written contents of the terminal
-            fetchLatest(hist, sh->cmd);  // fetches latest instruction
+            strcopy(sh->cmd, hist->list[hist->size]);
+            if (fetchItem(hist, &sh->latest) == NULL)
+            {
+                return;
+            }
+            strcopy(fetchItem(hist, &sh->latest), sh->cmd);
+
+            if (sh->latest > 0)
+            {
+                sh->latest--;
+            }
+            sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2;
             break;
         case 'B':
-            revFetchLatest(hist, sh->cmd);
+            if (sh->latest < hist->size - 1)
+            {
+                sh->latest++;
+            }
+
+            if (fetchItem(hist, &sh->latest) == NULL)
+            {
+                return;
+            }
+            strcopy(fetchItem(hist, &sh->latest), sh->cmd);
+            sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2;
             break;
         case 'C':
-            printf("\033[C");
-            fflush(stdout);
+            if (sh->cursoridx < strLen(sh->cmd) + strLen(sh->wdir) + 2)
+            {
+                sh->cursoridx++;
+            }
+
             break;
         case 'D':
-            printf("\033[D");
-            fflush(stdout);
+            if (sh->cursoridx > strLen(sh->wdir) + 2)
+            {
+                sh->cursoridx--;
+            }
             break;
         default:
             break;
         }
+    }
+}
+
+void reposCurs(shell *sh)
+{
+    // adjust cursor if <- or -> were pressed
+    printf("\r");
+    fflush(stdout);
+    for (int i = 0; i < sh->cursoridx; i++)
+    {
+        printf("\033[C");
+        fflush(stdout);
     }
 }
 
@@ -117,8 +155,9 @@ void getInput(shell *sh)
     sh->cmd[0] = '\0'; // Zur Kontrolle falls Benutzer nichts eingibt
     tcsetattr(0, TCSANOW, &sh->raw);
     char c;
-    int idx = 0;
-
+    int len = 0;
+    int anc = strLen(sh->wdir) + 2; // varible to memorize the beggining of the user editable part of the cmd line
+    sh->cursoridx = anc;
     while (1)
     {
 
@@ -129,7 +168,7 @@ void getInput(shell *sh)
             tabComplete(sh);
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes screen
             fflush(stdout);
-            idx = strLen(sh->cmd);
+            len = strLen(sh->cmd);
             break;
 
         case '\n': // user pressed enter to send their instruction
@@ -137,19 +176,26 @@ void getInput(shell *sh)
             {
                 continue;
             }
+
             printf("\r\n");
             fflush(stdout);
             tcsetattr(0, TCSANOW, &sh->canon);
-            add2Buf(&sh->history,sh->cmd);
-            resetLatest(&sh->history);
+
+            if ((addItem(&sh->history, sh->cmd)) == 0) // checks if adding item was successful
+            {
+                sh->latest = sh->history.size - 1; // resets latest (-2 due to size beginning at 1 not 0)
+            }
+
             return;
             break;
         case 127:
-            if (idx > 0)
+            if (sh->cursoridx > anc)
             {
-                idx--;
-                sh->cmd[idx] = '\0';
+                len--;
+                sh->cursoridx--;
+                delInStr(sh->cmd, sh->cursoridx - anc);
                 printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes the screen
+                reposCurs(sh);
                 fflush(stdout);
             }
             break;
@@ -157,17 +203,20 @@ void getInput(shell *sh)
         case '\033': // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
             handleArrows(sh);
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes the screen
-            idx = strLen(sh->cmd);
             fflush(stdout);
+
+            reposCurs(sh);
+            len = strLen(sh->cmd);
             break;
         default:
-            if (idx == 200)
+            if (len == 200)
             {
                 break;
             }
-            sh->cmd[idx] = c;
-            idx++;
-            sh->cmd[idx] = '\0';
+            sh->cmd[sh->cursoridx - anc] = c;
+            sh->cursoridx++;
+            len++;
+            sh->cmd[len] = '\0';
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshing screen
             fflush(stdout);
             break;

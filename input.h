@@ -4,5 +4,7 @@
 #define INPUT_H
 void getInput(shell* sh);
 void tabComplete(shell* sh);
+void handleArrows(shell* sh);
+void reposCurs(shell* sh);
 #endif
 
