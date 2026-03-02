@@ -5,7 +5,6 @@
 #include "str.h"
 #include "escapesequenzen.h"
 #include "list.h"
-#include "shellcmd.h"
 
 /// @brief support function which gets passed a shell struc and looks through present directories and looks for either complete or partial matches,
 ///        which will then be saved to the twins array(later the entire array will be printed out on a double press of TAB)
