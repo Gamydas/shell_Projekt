@@ -1,6 +1,6 @@
 CC = gcc 
 PRG = shell
-OBJ = main.o input.o str.o shellcmd.o tools.o circBuff.o
+OBJ = main.o input.o str.o shellcmd.o tools.o list.o
 
 
 $(PRG): $(OBJ)
