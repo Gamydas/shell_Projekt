@@ -28,9 +28,8 @@ void cd(char* dir)
 /// @brief prints current working directory
 void pwd()
 {
-    char* temp = malloc(200);
+    char temp[200];
     printf("%s\n", getcwd(temp,200));
-    free(temp);
 }
 
 /// @brief prints out the given string to the terminal
@@ -63,10 +62,10 @@ int redirect(char** instruc)
     
     // flags used to mark the position(and check its existence) of the operator in the string
     // flag[0] for >
-    // flag[0] for >>
-    // flag[0] for 2>
-    // flag[0] for 2>>
-    // flag[0] for <
+    // flag[1] for >>
+    // flag[2] for 2>
+    // flag[3] for 2>>
+    // flag[4] for <
     int flag[] = {-1,-1,-1,-1,-1};
 
     // variables used to store file descriptors 
