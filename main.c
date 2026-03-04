@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         }
         */
         // checking for redirection operators
-        if (redirect(myShell.instruc) == 0)
+        if (redirect(&myShell) == 0)
         {
             continue;
         }
@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
             {
                 execvp(myShell.instruc[0], myShell.instruc);
                 fprintf(stderr, "%s: not a command\n", myShell.instruc[0]); // if execvp cannot find the given command
+                freeList(&myShell.history);
                 exit(1);                                                    // in case exec fails
             }
             else // parent
