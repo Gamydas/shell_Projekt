@@ -78,29 +78,3 @@ int findMax(int* array, int size)
     }
     return max;
 }
-
-/// @brief function to find the maximal value in an array, excluding -1
-/// @param array 
-/// @param size size of array
-/// @return max value 
-int findMaxXn1(int* array, int size)
-{
-   
-    if(array == NULL)
-    {
-        fprintf(stderr,"Array is not initialized\n");
-        return -1;
-    }
-
-    int max = -__INT_MAX__;
-   
-
-    for (int i = 0; i < size; i++)  
-    {
-        if(*(array + i) > max && *(array + i) != -1)
-        {
-            max = *(array + i);
-        }
-    }
-    return max;
-}
