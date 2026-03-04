@@ -5,5 +5,4 @@ void cd(char* dir);
 void pwd();
 void type(char* text);
 void echo(char* text);
-int redirect(char**);
 #endif
