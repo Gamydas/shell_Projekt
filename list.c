@@ -7,6 +7,7 @@
 void initList(list* list_)
 {
     list_->list = malloc(2048); // creates an empty, leading item (useful for input.c)
+    list_->list[0][0] = '\0';
     list_->size = 0;
 }
 
@@ -23,6 +24,7 @@ int addItem(list* list_, char* text)
         return -1;
     }
     */
+    list_->size++;  // increments size before reallocating memory to get the correct amount of memory
     char (*temp)[2048] = realloc(list_->list, (list_->size + 1) * 2048);
     if(temp == NULL) // checks memory allocation error
     {
@@ -31,8 +33,7 @@ int addItem(list* list_, char* text)
     }
     
     list_->list = temp;
-    strcopy(text, list_->list[list_->size]);
-    list_->size++;  // increments size after the copying due to size always being an exact representation of items in the list
+    strcopy(text, list_->list[list_->size - 1]); // size -1 so the entry at index [size] will always be unused unless wanted otherwise
     
     return 0;
 }
