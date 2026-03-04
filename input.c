@@ -215,11 +215,21 @@ void getInput(shell *sh)
             {
                 break;
             }
-            sh->cmd[sh->cursoridx - anc] = c;
-            sh->cursoridx++;
-            len++;
-            sh->cmd[len] = '\0';
+            // cursor is in the string not at the end
+            if(sh->cursoridx - anc != len)
+            {
+                insertInStr(sh->cmd, c, sh->cursoridx - anc, (int) sizeof(sh->cmd));
+                sh->cursoridx++;
+                len++;
+                sh->cmd[len] = '\0';
+            } else { // cursor is at the end of the string
+                sh->cmd[sh->cursoridx - anc] = c;
+                sh->cursoridx++;
+                len++;
+                sh->cmd[len] = '\0';
+            }
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshing screen
+            reposCurs(sh);
             fflush(stdout);
             break;
         }
