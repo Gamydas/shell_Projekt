@@ -15,8 +15,10 @@ To do:
 - Quoting
 - Proper error-handling via Errno
 
+General:
+- there might be certain inputs that still cause unwanted behaviour in the shell, but every input that does that that I am aware of is now handled so the shell should work smoothly now
+
 Known problems:
-- due to an entirely new input structure (termios raw mode and bitwise reading) some for now unhandled signs (like arrow keys) cause unwanted behaviour in the shell, will be fixed ASAP
 - command history does not yet allow you to navigate back to an empty command line if that was the original state
 
 Installation: 
@@ -27,6 +29,7 @@ Limitations and Syntax:
 General Syntax
 - sequential commands via ; and background execution via & are not yet implemented
 - the Syntax for a command looks like this : cmd -flags (if there are any) target (if there is one)
+
 
 Redirections:
 - Redirections must be immediately followed by the target file
