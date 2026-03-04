@@ -517,7 +517,7 @@ int redirect(shell *sh)
         else if (min == 0) // redirection instructions come first
         {
 
-            int max = findMaxXn1(flag, 5);
+            int max = findMax(flag, 5);
             execvp(sh->instruc[max + 2], &sh->instruc[max + 2]); // +2 to offset last redirect + targeted file
         }
         fprintf(stderr, "%s: not a command\n", sh->instruc[0]); // if execvp cannot find the given command
