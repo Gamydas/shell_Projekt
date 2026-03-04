@@ -7,7 +7,7 @@ Currently implemented commands:
 - type (added 25.02.2026)
 - Redirections! (added 26.02.2026)
 - pre-installed Linux programs i.e ls, wc, vim etc.
-- Completition via TAB! (finally some quality of life) (added 28.02.2026)
+- Completion via TAB! (finally some quality of life) (added 28.02.2026)
 - Command history with arrow keys
 - Pipelining! (added 04.03.2026)
   
@@ -16,7 +16,7 @@ To do:
 - Proper error-handling via Errno
 
 Known problems:
-- due to an entirely new input structure (termios raw mode and bitwise reading) some for now unhandeled signs (like arrow keys) cause unwanted behaviour in the shell, will be fixed ASAP
+- due to an entirely new input structure (termios raw mode and bitwise reading) some for now unhandled signs (like arrow keys) cause unwanted behaviour in the shell, will be fixed ASAP
 - command history sometimes causes a realloc error (working on a fix)
 - command history does not yet allow you to navigate back to an empty command line if that was the original state
 
@@ -26,19 +26,19 @@ Installation:
 
 Limitations and Syntax:
 General Syntax
-- sequential commands via ; and backgroung execution via & are not yet implemented
+- sequential commands via ; and background execution via & are not yet implemented
 - the Syntax for a command looks like this : cmd -flags (if there are any) target (if there is one)
 
-Redrections:
+Redirections:
 - Redirections only work in succession i.e. ls file.txt file2.txt > output.txt 2> error.txt and not with seperate commands strung inbetween
 - Redirection command can also be first in line i.e. > file.txt ls
 
 Builtins:
 - type does not yet support preexisting linux programs like wc, ls, grep etc.
 
-Tab Completition:
-- works for full and partial completition(in case of multiple matches)
-- does not yet support nested completition or printing out all options on double tab
+Tab Completion:
+- works for full and partial completion(in case of multiple matches)
+- does not yet support nested completion or printing out all options on double tab
 
 Pipelining:
 - an example for the general pipelining syntax is: ls | grep main | wc 
