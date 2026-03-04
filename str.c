@@ -244,3 +244,39 @@ void delInStr(char* text, int idx)
     *(text + idx) = '\0';
     
 }
+
+/// @brief inserts a character into a string at a given index
+/// @param text 
+/// @param c character to be inserted
+/// @param idx index at which the character is to be inserted
+/// @param size size of text
+void insertInStr(char* text, char c, int idx, int size)
+{
+    // checking if idx is within bounds of the string size(-1 to make sure character fits the string)
+    if(idx >= size - 1 || idx <0) 
+    {
+        fprintf(stderr, "index out of bounds\n");
+        return;
+    }
+
+    int i = idx;
+    // first go to end of string
+    while(*(text + i))
+    {
+        i++;
+    } 
+
+    *(text + i + 1) = '\0'; // places nullterminator at the end of the newly sized string
+
+    // makes a "hole" in the string and cuts of the last character if nessecary
+    while(i != idx)
+    {
+        *(text + i) = *(text + i - 1); 
+        i--;
+    }
+    // inserts character at the desired position
+    *(text + idx) = c;
+
+
+
+}
