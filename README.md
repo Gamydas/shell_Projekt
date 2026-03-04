@@ -17,7 +17,6 @@ To do:
 
 Known problems:
 - due to an entirely new input structure (termios raw mode and bitwise reading) some for now unhandled signs (like arrow keys) cause unwanted behaviour in the shell, will be fixed ASAP
-- command history sometimes causes a realloc error (working on a fix)
 - command history does not yet allow you to navigate back to an empty command line if that was the original state
 
 Installation: 
@@ -30,17 +29,19 @@ General Syntax
 - the Syntax for a command looks like this : cmd -flags (if there are any) target (if there is one)
 
 Redirections:
-- Redirections only work in succession i.e. ls file.txt file2.txt > output.txt 2> error.txt and not with seperate commands strung inbetween
+- Redirections must be immediately followed by the target file
+- Multiple redirections must be grouped together and cannot have new commands in between i.e. ls file.txt file2.txt > output.txt 2> error.txt 
 - Redirection command can also be first in line i.e. > file.txt ls
 
 Builtins:
-- type does not yet support preexisting linux programs like wc, ls, grep etc.
+- type does not yet support preexisting linux programs like wc, ls, grep etc. 
 
 Tab Completion:
 - works for full and partial completion(in case of multiple matches)
 - does not yet support nested completion or printing out all options on double tab
 
 Pipelining:
+- a command may not begin with the "|" operator
 - an example for the general pipelining syntax is: ls | grep main | wc 
 - works for multiple and single pipelines
 - does not yet work with builtins
