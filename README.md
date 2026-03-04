@@ -43,7 +43,6 @@ Tab Completion:
 Pipelining:
 - an example for the general pipelining syntax is: ls | grep main | wc 
 - works for multiple and single pipelines
-- as stated above, this does already work with multiple pre-installed commands
 - does not yet work with builtins
 
 
