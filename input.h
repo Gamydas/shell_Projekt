@@ -7,6 +7,6 @@ void tabComplete(shell* sh);
 void handleArrows(shell* sh);
 void reposCurs(shell* sh);
 int handlePipes(shell* sh);
-int redirect(char**);
+int redirect(shell* sh);
 #endif
 

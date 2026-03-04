@@ -157,7 +157,7 @@ void getInput(shell *sh)
     fflush(stdout);
     sh->cmd[0] = '\0'; // Zur Kontrolle falls Benutzer nichts eingibt
     tcsetattr(0, TCSANOW, &sh->raw);
-    char c;
+    char c = '\0';
     int len = 0;
     int anc = strLen(sh->wdir) + 2; // varible to memorize the beggining of the user editable part of the cmd line
     sh->cursoridx = anc;
@@ -172,6 +172,7 @@ void getInput(shell *sh)
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes screen
             fflush(stdout);
             len = strLen(sh->cmd);
+            sh->cursoridx = len + anc;
             break;
 
         case '\n': // user pressed enter to send their instruction
@@ -183,14 +184,12 @@ void getInput(shell *sh)
             printf("\r\n");
             fflush(stdout);
             tcsetattr(0, TCSANOW, &sh->canon);
-
             if ((addItem(&sh->history, sh->cmd)) == 0) // checks if adding item was successful
             {
-                sh->latest = sh->history.size - 1; // resets latest (-2 due to size beginning at 1 not 0)
+                sh->latest = sh->history.size - 1; // resets latest
             }
 
             return;
-            break;
         case 127:
             if (sh->cursoridx > anc)
             {
@@ -306,7 +305,7 @@ int handlePipes(shell *sh)
                     close(pipes[z][1]);
                 }
 
-                // frees all allocated memory before returning 
+                // frees all allocated memory before returning
 
                 for (int i = 0; i <= pipecalls; i++)
                 {
@@ -390,136 +389,149 @@ int handlePipes(shell *sh)
         }
 
         return 0;
-    } else
+    }
+    else
     {
         return -1;
     }
 }
 
-/// @brief redirects stream to a chosen file 
+/// @brief redirects stream to a chosen file
 /// @param text
 /// @param filename
 /// @return returns 0 if redirection was succesful, -1 otherwise
-int redirect(char** instruc)
+int redirect(shell *sh)
 {
     int i = 0;
-    
+
     // flags used to mark the position(and check its existence) of the operator in the string
     // flag[0] for >
     // flag[1] for >>
     // flag[2] for 2>
     // flag[3] for 2>>
     // flag[4] for <
-    int flag[] = {-1,-1,-1,-1,-1};
+    int flag[] = {-1, -1, -1, -1, -1};
 
-    // variables used to store file descriptors 
-    int dataout = STDOUT_FILENO;      
+    // variables used to store file descriptors
+    int dataout = STDOUT_FILENO;
     int dataerr = STDERR_FILENO;
-    int datain  = STDIN_FILENO; 
-    while(instruc[i] != NULL)
+    int datain = STDIN_FILENO;
+    while (sh->instruc[i] != NULL)
     {
-        if(!strcomp(instruc[i],">"))
+        if (!strcomp(sh->instruc[i], ">"))
         {
             flag[0] = i;
         }
-        if(!strcomp(instruc[i],">>"))
+        if (!strcomp(sh->instruc[i], ">>"))
         {
             flag[1] = i;
         }
-        if(!strcomp(instruc[i],"2>"))
+        if (!strcomp(sh->instruc[i], "2>"))
         {
             flag[2] = i;
         }
-        if(!strcomp(instruc[i],"2>>"))
+        if (!strcomp(sh->instruc[i], "2>>"))
         {
             flag[3] = i;
         }
-        if(!strcomp(instruc[i],"<"))
+        if (!strcomp(sh->instruc[i], "<"))
         {
             flag[4] = i;
         }
         i++;
     }
-    
+
     // no redirection operator has been called
-    if(flag[0] == -1 && flag[1]== -1 && flag[2] == -1 && flag[3] == -1 && flag[4] == -1)
+    if (flag[0] == -1 && flag[1] == -1 && flag[2] == -1 && flag[3] == -1 && flag[4] == -1)
     {
-        return -1; 
+        return -1;
     }
-    
+
     // fetching filedescriptors in appropriate modes
-    if(flag[0] != -1)
+    if (flag[0] != -1)
     {
-        dataout = open(instruc[flag[0]+1],O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        dataout = open(sh->instruc[flag[0] + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }
-    if(flag[1] != -1)
+    if (flag[1] != -1)
     {
-        if(dataout == STDOUT_FILENO)
+        if (dataout == STDOUT_FILENO)
         {
-            dataout = open(instruc[flag[1]+1],O_WRONLY | O_CREAT | O_APPEND, 0644);
+            dataout = open(sh->instruc[flag[1] + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
         }
     }
-    if(flag[2] != -1)
+    if (flag[2] != -1)
     {
-        dataerr = open(instruc[flag[2]+1],O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        dataerr = open(sh->instruc[flag[2] + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }
-    if(flag[3] != -1)
+    if (flag[3] != -1)
     {
-        if(dataerr == STDERR_FILENO)
+        if (dataerr == STDERR_FILENO)
         {
-            dataerr = open(instruc[flag[3]+1],O_WRONLY | O_CREAT | O_APPEND, 0644);
+            dataerr = open(sh->instruc[flag[3] + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
         }
     }
-    if(flag[4] != -1)
+    if (flag[4] != -1)
     {
-        datain = open(instruc[flag[4]+1],O_RDONLY);
+        datain = open(sh->instruc[flag[4] + 1], O_RDONLY);
     }
 
     int rc = fork();
-    if(rc < 0)
+    if (rc < 0)
     {
-        fprintf(stderr,"fork failed\n");
+        close(dataout);
+        close(dataerr);
+        close(datain);
+        fprintf(stderr, "fork failed\n");
         return -1;
     }
 
     // child
-    if(rc == 0)
+    if (rc == 0)
     {
-        
+
         // setting up streams
-        dup2(dataout, STDOUT_FILENO);
-        dup2(dataerr, STDERR_FILENO);
-        dup2(datain, STDIN_FILENO);
-        close(dataout);
-        close(dataerr);
-        close(datain);
+        if (dataout != STDOUT_FILENO)
+        {
+            dup2(dataout, STDOUT_FILENO);
+            close(dataout);
+        }
+        if (dataerr != STDERR_FILENO)
+        {
+            dup2(dataerr, STDERR_FILENO);
+            close(dataerr);
+        }
+        if (datain != STDIN_FILENO)
+        {
+            dup2(datain, STDIN_FILENO);
+            close(datain);
+        }
 
         // command is first in the string
         int min = findMinXn1(flag, 5);
-        if(min != 0 )
+        if (min != 0)
         {
-            // this block cuts the instruc array off at the point of redirection so ls does not read invalid arguments
-            instruc[min] = NULL;
-
-            execvp(instruc[0], instruc);
-            fprintf(stderr,"%s: not a command\n",instruc[0]);      // if execvp cannot find the given command
-            return -1;
-        } 
-        // redirection instructions come first
-        if(min == 0)
-        {
-    
-            int max = findMax(flag, 5);
-            execvp(instruc[max+1], &instruc[max+1]);
-            fprintf(stderr,"%s: not a command\n",instruc[max+1]);      // if execvp cannot find the given command
-            return -1;
+            // this block cuts the instruc array off at the point of redirection so command does not read invalid arguments
+            sh->instruc[min] = NULL;
+            execvp(sh->instruc[0], sh->instruc);
         }
-    } else 
+        else if (min == 0) // redirection instructions come first
+        {
+
+            int max = findMaxXn1(flag, 5);
+            execvp(sh->instruc[max + 2], &sh->instruc[max + 2]); // +2 to offset last redirect + targeted file
+        }
+        fprintf(stderr, "%s: not a command\n", sh->instruc[0]); // if execvp cannot find the given command
+        exit(1);
+    }
+    else
     {
+        if (dataout != STDOUT_FILENO)
+            close(dataout);
+        if (dataerr != STDERR_FILENO)
+            close(dataout);
+        if (datain != STDIN_FILENO)
+            close(dataout);
         wait(0);
-        close(dataout);
-        close(dataerr);
-        close(datain);
     }
 
     return 0;
