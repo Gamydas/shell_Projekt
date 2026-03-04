@@ -7,7 +7,7 @@
 #include "shell.h"
 #include "input.h"
 #include "str.h"
-#include "shellcmd.h"
+#include "buildtins.h"
 #include "escapesequenzen.h"
 #include "list.h"
 
@@ -68,7 +68,11 @@ int main(int argc, char *argv[])
         {
             continue;
         }
-        
+        // checks if pipelining is called and if so handles it and then contiunues the main loop
+        if(handlePipes(&myShell) == 0)
+        {
+            continue;
+        }
         // exits main function
         if (strcomp(myShell.cmd, "exit") == 0)
         {
