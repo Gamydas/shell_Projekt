@@ -191,7 +191,7 @@ int parseStr(char *Text, char **arr)
 /// @param prefix 
 /// @param length first dimension of array
 /// @param width second dimension of array
-void findPrefix(char arr[][256], char* prefix, int length, int width)
+void findPrefix(char arr[][256], char* prefix, int width, int length)
 {
     int found = 0;
     int brk = 0;
@@ -277,6 +277,17 @@ void insertInStr(char* text, char c, int idx, int size)
     // inserts character at the desired position
     *(text + idx) = c;
 
+}
 
-
+/// @brief function to initialize every position in a str, inspired by memset
+/// @param text 
+/// @param c constant to fill the string with
+/// @param size size of string
+void initStr(char* text, int c, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        text[i] = c;
+    }
+    
 }

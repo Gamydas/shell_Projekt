@@ -11,4 +11,5 @@ void findPrefix(char arr[][256], char* prefix, int width, int length);
 int strLen(char* text);
 void delInStr(char* text, int idx);
 void insertInStr(char* text, char c, int idx, int size);
+void initStr(char* text, int c, int size);
 #endif
