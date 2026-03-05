@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "str.h"
 
 /// @brief function copies contents of origin into dest
 /// @param origin original message that is to be copied
@@ -142,7 +143,7 @@ int flagstrcomp(char* first, char* second, int* flag, int number)
 /// @brief function seperates a string into segments which are indicated by spaces
 /// @param Text string to be seperated into segments
 /// @param arr  array in which the segments are to be stored, first dimension for indices second for the parts of the string
-/// @return returns 0 if parsing was successful, -1 otherwise
+/// @return returns the amount of seperations if parsing was successful, -1 otherwise
 int parseStr(char *Text, char **arr)
 {
     int i = 0;    // index variable
@@ -183,7 +184,7 @@ int parseStr(char *Text, char **arr)
     }
     arri++;
     arr[arri] = NULL; // marks end of instruction array
-    return 0;
+    return arri;
 }
 
 /// @brief function compares finds the greates shared prefix in a 2D char arrays and writes it into prefix
