@@ -7,7 +7,7 @@
 #include "shell.h"
 #include "str.h"
 #include "escapesequenzen.h"
-#include "list.h"
+// #include "list.h"
 #include "tools.h"
 
 /// @brief support function which gets passed a shell struc and looks through present directories and looks for either complete or partial matches,
@@ -15,16 +15,16 @@
 /// @param sh
 void tabComplete(shell *sh)
 {
-    DIR *temp = opendir(sh->wdir);
-    struct dirent *temp2;
-    char tempdir[256];
-    int count = 0;
+    DIR *temp = opendir(sh->wdir); // opens the directory stream of the current working directory
+    struct dirent *temp2 = NULL;
+    char tempdir[256]; // variable to safe the currently loaded dir from the stream for comparison
+    initStr(tempdir, 0, sizeof(tempdir));
+    int count = 0; // counter variable for while
 
-    // moving to the first uncompleted part of the cmd string
     int i = 0;
     while (sh->cmd[i] != '\0')
     {
-        while (sh->cmd[i] == 32 || sh->cmd[i] == '/')
+        while (sh->cmd[i] == 32 || sh->cmd[i] == '/') // checking for spaces or "/" as separators
         {
             i++;
             if (sh->cmd[i] != 32 && sh->cmd[i] != '\0' && sh->cmd[i] != '/')
@@ -33,38 +33,82 @@ void tabComplete(shell *sh)
             }
         }
         i++;
-    }
+    } /* This block iterates over the cmd string until it finds the first incomplete part.
+         The inner loop looks for the final space or "/ used to seperate segments of the string
+         and saves the first character of the to be completed part in count*/
 
     int c2 = count;      // quickfix for memorising first letter of new cmd segment
     char twins[50][256]; // array used to save identical option incase there are multiple similarily named files
-    int twidx = 0;       // index of twins array to properly save
+    for (int i = 0; i < 50; i++)
+    {
+        initStr(twins[i], 0, sizeof(tempdir));
+    } // initialized twins to avoid problems
+
+    int twidx = 0; // index of twins array to properly save
+
     while ((temp2 = readdir(temp)) != NULL)
     {
         strcopy(temp2->d_name, tempdir);
-        while (sh->cmd[count] == tempdir[count - c2])
+        while (sh->cmd[count] == tempdir[count - c2] && sh->cmd[count] != 0)
         {
             count++;
             if (sh->cmd[count] == '\0')
             {
                 strcopy(tempdir, twins[twidx]);
                 twidx++;
+                // this checks if the found match is identicel i.e there is nothing to complete
+                if (strcomp(&sh->cmd[count], tempdir) == 0)
+                    twidx = 0;
             }
         }
         count = c2;
-    }
+    } /* This block iterates over every directory within the current working directory,
+         copies the current name into tempdir and then compares tempdir character
+         by character with the command string from the above memorised word beginning.
+         If every latter of from the memorised index until the null terminator of the
+         command matches the directory will be saved in the twins array and twidx will
+         be incremented once. */
+
+    // if no match was found
     if (twidx == 0)
     {
-        printf("\a"); // plays error sound
+        printf("\a"); // plays sound
         fflush(stdout);
     }
-    if (twidx == 1) // only checks if there even is an entry in twins
+
+    // exactly one match was found
+    if (twidx == 1)
     {
         strcopy(twins[0], &sh->cmd[c2]);
     }
-    if (twidx > 1) // more than one compatible option
+    // multiple matches found
+    if (twidx > 1)
     {
+        // indicates this is the second consecutive tab press, so all options will be printed on the terminal
+        if (sh->doubletab == 1)
+        {
+            printf("\n"); // initial line break
+            fflush(stdout);
+            for (int i = 0; i < twidx; i++)
+            {
+                printf("%-15s", twins[i]); // for now static size with 15, will format this better soon
+                fflush(stdout);
+                if (i % 6 == 0)
+                {
+                    printf("\n"); // line break after 6 items
+                    fflush(stdout);
+                }
+            }
+            sh->doubletab = 0; // resets tab counter
+        }
+        else
+            sh->doubletab = 1; // indicates first tab
+
+        printf("\a"); // plays sound
+        fflush(stdout);
         char prefix[256]; // 255 is the max length of characters in a filename under Linux
-        findPrefix(twins, prefix, twidx, 256);
+        prefix[0] = '\0';
+        findPrefix(twins, prefix, 256, twidx);
         strcopy(prefix, &sh->cmd[c2]);
     }
 
@@ -74,68 +118,81 @@ void tabComplete(shell *sh)
 void handleArrows(shell *sh)
 {
 
-    list *hist = &sh->history;
-    char c;
+    char c = '\0';
     read(0, &c, 1);
-    // printf("read 1: %c\n", c);
-    // fflush(stdout);
-    if (c != '[')
+
+    if (c != '[') // all arrow keys begin with \033[
     {
         return;
     }
     else
     {
         read(0, &c, 1);
-        // printf("read 2: %c\n", c);
-        // fflush(stdout);
+
         switch (c)
         {
-        case 'A':
-            strcopy(sh->cmd, hist->list[hist->size]);
-            if (fetchItem(hist, &sh->latest) == NULL)
+        case 'A': // arrow up
+            if (sh->histpos == 0)
             {
+                printf("\a");
+                fflush(stdout);
                 return;
-            }
-            strcopy(fetchItem(hist, &sh->latest), sh->cmd);
-
-            if (sh->latest > 0)
+            } /* checks if oldest command has been reached*/
+            if (sh->histpos > 0)
             {
-                sh->latest--;
+                strcopy(sh->cmd, sh->hist[sh->histpos]);                // saves current input in history at histpos
+                sh->histpos--;                                          // goes back into hist by 1
+                strcopy(sh->hist[sh->histpos], sh->cmd);                // copies previous instruction into the command
+                sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2; // repositioning cursoridx
             }
-            sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2;
             break;
-        case 'B':
-            if (sh->latest < hist->size - 1)
-            {
-                sh->latest++;
-            }
 
-            if (fetchItem(hist, &sh->latest) == NULL)
+        case 'B': // arrow down
+            if (sh->histpos == 50 || sh->hist[sh->histpos][0] == 0)
             {
+                printf("\a");
+                fflush(stdout);
                 return;
-            }
-            strcopy(fetchItem(hist, &sh->latest), sh->cmd);
-            sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2;
+            } /* checks if newest command has been reached*/
+            strcopy(sh->cmd, sh->hist[sh->histpos]); // saves current input in history at histpos
+            sh->histpos++;
+            strcopy(sh->hist[sh->histpos], sh->cmd);                // copies previous instruction into the command
+            sh->cursoridx = strLen(sh->cmd) + strLen(sh->wdir) + 2; // repositioning cursoridx
             break;
         case 'C':
+            // checks if the curosr has met the rightmost edge of the command then increments cursor if not
             if (sh->cursoridx < strLen(sh->cmd) + strLen(sh->wdir) + 2)
             {
                 sh->cursoridx++;
             }
-
+            else
+            {
+                printf("\a");
+                fflush(stdout);
+                return;
+            }
             break;
         case 'D':
+            // checks if the curosr has met the leftmost edge of the command then decrements cursor if not
             if (sh->cursoridx > strLen(sh->wdir) + 2)
             {
                 sh->cursoridx--;
             }
+            else
+            {
+                printf("\a");
+                fflush(stdout);
+                return;
+            }
             break;
-        default:
+        default: // other escape sequences starting with \033[ are ignored for now
             break;
         }
     }
 }
 
+/// @brief function to reposition cursor on the screen
+/// @param sh
 void reposCurs(shell *sh)
 {
     // adjust cursor if <- or -> were pressed
@@ -153,14 +210,14 @@ void reposCurs(shell *sh)
 /// @param cmd string which will be interpreted as a command
 void getInput(shell *sh)
 {
-    printf("%s: ", sh->wdir); // Prompt auf Bildschirm ausgeben
+    printf("%s: ", sh->wdir); // display prompt
     fflush(stdout);
-    sh->cmd[0] = '\0'; // Zur Kontrolle falls Benutzer nichts eingibt
+    sh->cmd[0] = '\0'; // to check if nothing was input
     tcsetattr(0, TCSANOW, &sh->raw);
     char c = '\0';
-    int len = 0;
+    int len = 0;                    // variable checks how long the currently typed cmd is
     int anc = strLen(sh->wdir) + 2; // varible to memorize the beggining of the user editable part of the cmd line
-    sh->cursoridx = anc;
+    sh->cursoridx = anc;            // positions cursor at the first user eligable position
     while (1)
     {
 
@@ -171,8 +228,8 @@ void getInput(shell *sh)
             tabComplete(sh);
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes screen
             fflush(stdout);
-            len = strLen(sh->cmd);
-            sh->cursoridx = len + anc;
+            len = strLen(sh->cmd);     // readjusts str len
+            sh->cursoridx = len + anc; // readjusts cursor
             break;
 
         case '\n': // user pressed enter to send their instruction
@@ -180,15 +237,19 @@ void getInput(shell *sh)
             {
                 continue;
             }
-
+            strcopy(sh->cmd, sh->hist[sh->histpos]);
+            sh->histpos++;
+            sh->doubletab = 0; // resets doubletab counter
             printf("\r\n");
             fflush(stdout);
-            tcsetattr(0, TCSANOW, &sh->canon);
+            tcsetattr(0, TCSANOW, &sh->canon); // exits raw mode
+
+            /*
             if ((addItem(&sh->history, sh->cmd)) == 0) // checks if adding item was successful
             {
-                sh->latest = sh->history.size - 1; // resets latest
+                sh->latest = sh->history.size - 1;     // resets latest
             }
-
+            */
             return;
         case 127:
             if (sh->cursoridx > anc)
@@ -200,6 +261,12 @@ void getInput(shell *sh)
                 reposCurs(sh);
                 fflush(stdout);
             }
+            else
+            {
+                printf("\a");
+                fflush(stdout);
+            }
+            sh->doubletab = 0; // resets doubletab counter
             break;
 
         case '\033': // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
@@ -209,20 +276,25 @@ void getInput(shell *sh)
 
             reposCurs(sh);
             len = strLen(sh->cmd);
+            sh->doubletab = 0; // resets doubletab counter
             break;
         default:
             if (len == 200)
             {
+                printf("\a");
+                fflush(stdout);
                 break;
             }
             // cursor is in the string not at the end
-            if(sh->cursoridx - anc != len)
+            if (sh->cursoridx - anc != len)
             {
-                insertInStr(sh->cmd, c, sh->cursoridx - anc, (int) sizeof(sh->cmd));
+                insertInStr(sh->cmd, c, sh->cursoridx - anc, (int)sizeof(sh->cmd));
                 sh->cursoridx++;
                 len++;
                 sh->cmd[len] = '\0';
-            } else { // cursor is at the end of the string
+            }
+            else
+            { // cursor is at the end of the string
                 sh->cmd[sh->cursoridx - anc] = c;
                 sh->cursoridx++;
                 len++;
@@ -231,6 +303,7 @@ void getInput(shell *sh)
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshing screen
             reposCurs(sh);
             fflush(stdout);
+            sh->doubletab = 0; // resets doubletab counter
             break;
         }
     }
@@ -449,7 +522,8 @@ int redirect(shell *sh)
             flag[4] = i;
         }
         i++;
-    }
+    } /* looks for the redirection operators and if found saves
+         their position in the appropriate flag*/
 
     // no redirection operator has been called
     if (flag[0] == -1 && flag[1] == -1 && flag[2] == -1 && flag[3] == -1 && flag[4] == -1)
@@ -488,6 +562,7 @@ int redirect(shell *sh)
     int rc = fork();
     if (rc < 0)
     {
+        // closing all opend streams to avoid leaks
         close(dataout);
         close(dataerr);
         close(datain);
@@ -535,6 +610,7 @@ int redirect(shell *sh)
     }
     else
     {
+        // this block checks if any new filedescriptors were opend and closes them if so
         if (dataout != STDOUT_FILENO)
             close(dataout);
         if (dataerr != STDERR_FILENO)
