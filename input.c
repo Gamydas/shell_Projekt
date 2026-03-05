@@ -7,117 +7,119 @@
 #include "shell.h"
 #include "str.h"
 #include "escapesequenzen.h"
-// #include "list.h"
 #include "tools.h"
+
+
+void completeBuiltin(shell *sh)
+{
+    // checks if the command was already a full builtin or only a partial
+    for (int i = 0; i < sh->amt; i++)
+    {
+        if (strcomp(sh->builtins[i], sh->compl.parse[0]) == 0)
+        {
+            sh->compl.binflag = i;
+        }
+    }
+
+    /* if this is true the user typed in a full command, but not a
+       single letter to complete via TAB so the bell rings
+    */
+    if (sh->compl.binflag != -1)
+    {
+        sh->compl.binflag = -1;
+        printf("\a");
+        fflush(stdout);
+        return;
+    }
+    else
+    {
+
+        for (int i = 0; i < sh->amt; i++)
+        {
+            int j = 0;
+            while (sh->compl.parse[0][j] == sh->builtins[i][j])
+            {
+                j++;
+                if (sh->compl.parse[0][j] == '\0')
+                {
+                    strcopy(sh->builtins[i], sh->compl.twins[sh->compl.twidx]);
+                    sh->compl.twidx++;
+                }
+            }
+        } /* this block iterates over every item in sh->builtins and
+             compares parse to it char by char if a match has been
+             found it gets written into twins and twidx gets incremented*/
+    }
+
+    // no match was found
+    if (sh->compl.twidx == 0)
+    {
+        printf("\a");
+        fflush(stdout);
+        return;
+    }
+    // exactly one match was found
+    if (sh->compl.twidx == 1)
+    {
+        strcopy(sh->compl.twins[0], sh->cmd);
+        int temp = strLen(sh->compl.twins[0]);
+        sh->cmd[temp] = 32;
+        sh->cmd[temp + 1] = '\0';
+        return;
+    }
+    // more than one match was found
+    if (sh->compl.twidx > 1)
+    {
+        // checks if user pressed tab multiple times to print out all possible options
+        if (sh->doubletab > 1)
+        {
+            for (int i = 0; i < sh->compl.twidx; i++)
+            {
+                printf("%15s", sh->compl.twins[i]);
+                fflush(stdout);
+                if (i % 6 == 0)
+                {
+                    printf("\r\n");
+                    fflush(stdout);
+                }
+            }
+        }
+        else sh->doubletab++; // increments this if it was not the atleast 3rd press of tab
+
+        findPrefix(sh->compl.twins, sh->compl.prefix, 256, sh->compl.twidx);
+        strcopy(sh->compl.prefix, sh->cmd);
+        return;
+    }
+}
+
 
 /// @brief support function which gets passed a shell struc and looks through present directories and looks for either complete or partial matches,
 ///        which will then be saved to the twins array(later the entire array will be printed out on a double press of TAB)
 /// @param sh
 void tabComplete(shell *sh)
 {
-    DIR *temp = opendir(sh->wdir); // opens the directory stream of the current working directory
-    struct dirent *temp2 = NULL;
-    char tempdir[256]; // variable to safe the currently loaded dir from the stream for comparison
-    initStr(tempdir, 0, sizeof(tempdir));
-    int count = 0; // counter variable for while
-
-    int i = 0;
-    while (sh->cmd[i] != '\0')
+    initTab(&sh->compl);
+    sh->compl.cwd = opendir(sh->wdir); // opens the directory stream of the current working directory
+    int args = parseStr(sh->cmd, sh->compl.parse);
+    if(args > 0)
     {
-        while (sh->cmd[i] == 32 || sh->cmd[i] == '/') // checking for spaces or "/" as separators
+        int curlen = strLen(sh->compl.parse[args-1]);
+
+        // only a command(builtin or executable) has been (partially) typed
+        if (args == 1)
         {
-            i++;
-            if (sh->cmd[i] != 32 && sh->cmd[i] != '\0' && sh->cmd[i] != '/')
-            {
-                count = i;
-            }
+            completeBuiltin(sh);
         }
-        i++;
-    } /* This block iterates over the cmd string until it finds the first incomplete part.
-         The inner loop looks for the final space or "/ used to seperate segments of the string
-         and saves the first character of the to be completed part in count*/
-
-    int c2 = count;      // quickfix for memorising first letter of new cmd segment
-    char twins[50][256]; // array used to save identical option incase there are multiple similarily named files
-    for (int i = 0; i < 50; i++)
-    {
-        initStr(twins[i], 0, sizeof(tempdir));
-    } // initialized twins to avoid problems
-
-    int twidx = 0; // index of twins array to properly save
-
-    while ((temp2 = readdir(temp)) != NULL)
-    {
-        strcopy(temp2->d_name, tempdir);
-        while (sh->cmd[count] == tempdir[count - c2] && sh->cmd[count] != 0)
-        {
-            count++;
-            if (sh->cmd[count] == '\0')
-            {
-                strcopy(tempdir, twins[twidx]);
-                twidx++;
-                // this checks if the found match is identicel i.e there is nothing to complete
-                if (strcomp(&sh->cmd[count], tempdir) == 0)
-                    twidx = 0;
-            }
-        }
-        count = c2;
-    } /* This block iterates over every directory within the current working directory,
-         copies the current name into tempdir and then compares tempdir character
-         by character with the command string from the above memorised word beginning.
-         If every latter of from the memorised index until the null terminator of the
-         command matches the directory will be saved in the twins array and twidx will
-         be incremented once. */
-
-    // if no match was found
-    if (twidx == 0)
-    {
-        printf("\a"); // plays sound
-        fflush(stdout);
     }
-
-    // exactly one match was found
-    if (twidx == 1)
-    {
-        strcopy(twins[0], &sh->cmd[c2]);
-    }
-    // multiple matches found
-    if (twidx > 1)
-    {
-        // indicates this is the second consecutive tab press, so all options will be printed on the terminal
-        if (sh->doubletab == 1)
-        {
-            printf("\n"); // initial line break
-            fflush(stdout);
-            for (int i = 0; i < twidx; i++)
-            {
-                printf("%-15s", twins[i]); // for now static size with 15, will format this better soon
-                fflush(stdout);
-                if (i % 6 == 0)
-                {
-                    printf("\n"); // line break after 6 items
-                    fflush(stdout);
-                }
-            }
-            sh->doubletab = 0; // resets tab counter
-        }
-        else
-            sh->doubletab = 1; // indicates first tab
-
-        printf("\a"); // plays sound
-        fflush(stdout);
-        char prefix[256]; // 255 is the max length of characters in a filename under Linux
-        prefix[0] = '\0';
-        findPrefix(twins, prefix, 256, twidx);
-        strcopy(prefix, &sh->cmd[c2]);
-    }
-
-    closedir(temp);
+    
+    closedir(sh->compl.cwd);
 }
+
+
+
 
 void handleArrows(shell *sh)
 {
-
     char c = '\0';
     read(0, &c, 1);
 
@@ -622,3 +624,5 @@ int redirect(shell *sh)
 
     return 0;
 }
+
+
