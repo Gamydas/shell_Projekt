@@ -10,7 +10,6 @@ typedef struct
     char* parse[200];
     char buffer[50][200];
     char twins[50][256];
-    int binflag;
     int count;
     int twidx;
     int args;
@@ -18,7 +17,12 @@ typedef struct
 
 } tabComp;
 
+typedef struct shell shell;
+
 void initTab(tabComp* tab);
+void tabComplete(shell* sh);
+void completeBuiltin(shell* sh); 
+void completeArguments(shell *sh);
 
 
 #endif 
