@@ -6,9 +6,15 @@
 /// @param sh 
 void initShell(shell* sh)
 {
+    // integer intitializations
     sh->cursoridx = 0;
     sh->doubletab = 0;
     sh->histpos = 0;
+    sh->binamt = 4;
+    sh->binflag = -1;
+
+    
+    // str and buffer initializations
     initStr(sh->cmd, 0, sizeof(sh->cmd));
     initStr(sh->wdir, 0, sizeof(sh->wdir));
     for (int i = 0; i < 50; i++)
@@ -23,8 +29,8 @@ void initShell(shell* sh)
     strcopy("pwd", sh->builtins[1]);
     strcopy("echo", sh->builtins[2]);
     strcopy("type", sh->builtins[3]);
-    sh->amt = 4;
-
+    
+    // termios initialization
     tcgetattr(0, &sh->canon);
     tcgetattr(0, &sh->raw);
     sh->raw.c_iflag &= ~(IXON);
