@@ -93,7 +93,7 @@ int nstrcomp(char *first, char *second)
 /// @brief case-sensitvely compares 2 strings
 /// @param first
 /// @param second
-/// @return returns 0 if both strings are identical, -1 otherwise
+/// @return returns 0 if both strings are identical, -1 otherwise and 1 if identical to the end of one shorter string
 int strcomp(char *first, char *second)
 {
     int i = 0;
@@ -108,7 +108,7 @@ int strcomp(char *first, char *second)
 
     if (*(first + i) != *(second + i)) // checks if one of the strings was shorter and thus not identical
     {
-        return -1;
+        return 1;
     }
     return 0;
 }
