@@ -5,4 +5,6 @@ void cd(char* dir);
 void pwd();
 void type(char* text);
 void echo(char* text);
+
+int fetchBinFlag(char** chararr, int size);
 #endif
