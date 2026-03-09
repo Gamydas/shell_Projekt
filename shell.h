@@ -1,6 +1,5 @@
 #include <termios.h>
 #include <unistd.h>
-#include "tabComplete.h"
 
 #ifndef SHELL_H
 #define SHELL_H
@@ -14,15 +13,15 @@ typedef struct shell
     char hist[50][200];                // array to store the command history in
     char builtins[50][10];             // an array to store the name of all builtins
     int binamt;                           // indicates the amount of builtins
-    int binflag;
+    int binflag;                       // signals if a bin was found
+    int exec;                          // -1 if no exec was used, 0 if exec was used
     int histpos;                       // index for hist array
     int cursoridx;                     // position index for the cursor on the screen
-    int doubletab;                     // flag to check if there was a previous tab input
+    
     
     
     struct termios canon;
     struct termios raw;
-    tabComp compl;
     
 } shell;
 

@@ -8,7 +8,6 @@ void initShell(shell* sh)
 {
     // integer intitializations
     sh->cursoridx = 0;
-    sh->doubletab = 0;
     sh->histpos = 0;
     sh->binamt = 4;
     sh->binflag = -1;
