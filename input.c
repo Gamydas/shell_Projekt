@@ -8,11 +8,7 @@
 #include "str.h"
 #include "escapesequenzen.h"
 #include "tools.h"
-
-
-
-
-
+#include "tab.h"
 
 void handleArrows(shell *sh)
 {
@@ -108,6 +104,8 @@ void reposCurs(shell *sh)
 /// @param cmd string which will be interpreted as a command
 void getInput(shell *sh)
 {
+    tabComp tab;
+    initTab(&tab);
     printf("%s: ", sh->wdir); // display prompt
     fflush(stdout);
     sh->cmd[0] = '\0'; // to check if nothing was input
@@ -123,7 +121,12 @@ void getInput(shell *sh)
         switch (c)
         {
         case '\t': // Tabulator to autocomplete the directory if possible
-            tabComplete(sh);
+            if(tab.tabs == 0)
+            {
+                initTab(&tab);
+            }
+            tab.tabs++;
+            tabComplete(&tab, sh->cmd, sh->wdir);
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes screen
             fflush(stdout);
             len = strLen(sh->cmd);     // readjusts str len
@@ -137,7 +140,7 @@ void getInput(shell *sh)
             }
             strcopy(sh->cmd, sh->hist[sh->histpos]);
             sh->histpos++;
-            sh->doubletab = 0; // resets doubletab counter
+            tab.tabs = 0; // resets Tab counter
             printf("\r\n");
             fflush(stdout);
             tcsetattr(0, TCSANOW, &sh->canon); // exits raw mode
@@ -150,6 +153,7 @@ void getInput(shell *sh)
             */
             return;
         case 127:
+            tab.tabs = 0; // resets Tab counter
             if (sh->cursoridx > anc)
             {
                 len--;
@@ -164,7 +168,7 @@ void getInput(shell *sh)
                 printf("\a");
                 fflush(stdout);
             }
-            sh->doubletab = 0; // resets doubletab counter
+
             break;
 
         case '\033': // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
@@ -174,7 +178,8 @@ void getInput(shell *sh)
 
             reposCurs(sh);
             len = strLen(sh->cmd);
-            sh->doubletab = 0; // resets doubletab counter
+            tab.tabs = 0; // resets Tab counter
+
             break;
         default:
             if (len == 200)
@@ -201,7 +206,7 @@ void getInput(shell *sh)
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshing screen
             reposCurs(sh);
             fflush(stdout);
-            sh->doubletab = 0; // resets doubletab counter
+            tab.tabs = 0; // resets Tab counter
             break;
         }
     }
@@ -520,5 +525,3 @@ int redirect(shell *sh)
 
     return 0;
 }
-
-
