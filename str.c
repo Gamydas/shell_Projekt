@@ -192,7 +192,7 @@ int parseStr(char *Text, char **arr)
 /// @param prefix 
 /// @param length first dimension of array
 /// @param width second dimension of array
-void findPrefix(char arr[][256], char* prefix, int width, int length)
+void findPrefix(char (*arr)[2048], char* prefix, int width, int length)
 {
     int found = 0;
     int brk = 0;
