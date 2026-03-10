@@ -9,6 +9,7 @@
 #include "str.h"
 #include "buildtins.h"
 #include "escapesequenzen.h"
+#include "parser.h"
 //#include "list.h"
 
 int main(int argc, char *argv[])
@@ -34,11 +35,7 @@ int main(int argc, char *argv[])
         
 
         // seperating the command String into the seperate instructions
-        if (parseStr(myShell.cmd, myShell.instruc) == -1)
-        {
-            fprintf(stderr, "error parsing command\n");
-            continue;
-        }
+        parseInput(myShell.cmd, myShell.instruc);
 
         /*  Test loop to print parsed String
         for (int i = 0; i < 50; i++)
