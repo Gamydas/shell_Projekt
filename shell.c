@@ -1,6 +1,5 @@
 #include "shell.h"
 #include "str.h"
-#include "tabComplete.h"
 
 /// @brief function initializes a shell struct
 /// @param sh 

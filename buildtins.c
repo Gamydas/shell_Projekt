@@ -37,8 +37,8 @@ void cd(char* dir)
 /// @brief prints current working directory
 void pwd()
 {
-    char temp[200];
-    printf("%s\n", getcwd(temp, 200));
+    char temp[2048];
+    printf("%s\n", getcwd(temp, 2048));
 }
 
 /// @brief prints out the given string to the terminal

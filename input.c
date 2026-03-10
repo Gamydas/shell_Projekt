@@ -126,7 +126,7 @@ void getInput(shell *sh)
                 initTab(&tab);
             }
             tab.tabs++;
-            tabComplete(&tab, sh->cmd, sh->wdir);
+            tabComplete(&tab, sh->builtins,sh->cmd, sh->wdir);
             printf("\r\033[K%s: %s", sh->wdir, sh->cmd); // refreshes screen
             fflush(stdout);
             len = strLen(sh->cmd);     // readjusts str len
@@ -182,7 +182,7 @@ void getInput(shell *sh)
 
             break;
         default:
-            if (len == 200)
+            if (len == (int)sizeof(sh->cmd))
             {
                 printf("\a");
                 fflush(stdout);

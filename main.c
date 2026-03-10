@@ -19,17 +19,19 @@ int main(int argc, char *argv[])
     HOME;
     while (1)
     {
+        // loading the current directory into it wdir string
+        getcwd(myShell.wdir, sizeof(myShell.wdir));
+
+        // loading the user command into cmd string
+        getInput(&myShell);
+
         // Initializing instruc
         for (int i = 0; i < 50; i++)
         {
             myShell.instruc[i] = myShell.buffer[i];
         }
 
-        // loading the current directory into it wdir string
-        getcwd(myShell.wdir, sizeof(myShell.wdir));
-
-        // loading the user command into cmd string
-        getInput(&myShell);
+        
 
         // seperating the command String into the seperate instructions
         if (parseStr(myShell.cmd, myShell.instruc) == -1)
