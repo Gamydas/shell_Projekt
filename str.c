@@ -68,8 +68,8 @@ void tlc(char *Text)
 int nstrcomp(char *first, char *second)
 {
     int i = 0;
-    char temp[200];
-    char temp2[200];
+    char temp[strLen(first)];
+    char temp2[strLen(second)];
     strcopy(first, temp);
     strcopy(second, temp2);
     tlc(temp);  // converts first to lowercase
@@ -163,7 +163,6 @@ int parseStr(char *Text, char **arr)
                 temp = i; // remembers start point of the str
                 continue;
             }
-
             if ((strcopySeg(Text, arr[arri], temp, i - 1))) // i - 1 so the space does not get copied aswell
             {
                 return -1; // error occured while segmenting the string
@@ -177,7 +176,6 @@ int parseStr(char *Text, char **arr)
         }
         i++;
     }
-
     if ((strcopySeg(Text, arr[arri], temp, i - 1))) // i - 1 so the nullterminator does not get copied aswell
     {
         return -1; // error occured while segmenting the string
@@ -187,15 +185,15 @@ int parseStr(char *Text, char **arr)
     return arri;
 }
 
-/// @brief function compares finds the greates shared prefix in a 2D char arrays and writes it into prefix
+/// @brief function finds the greates shared prefix in a 2D char arrays and writes it into prefix
 /// @param arr 
 /// @param prefix 
 /// @param length first dimension of array
 /// @param width second dimension of array
 void findPrefix(char (*arr)[2048], char* prefix, int width, int length)
 {
-    int found = 0;
-    int brk = 0;
+    int found = 0;                                
+    int brk = 0;                                 // flag to break out of outer for loop
     for (int i = 1; i < length; i++)
     {
         if (brk)
@@ -215,6 +213,10 @@ void findPrefix(char (*arr)[2048], char* prefix, int width, int length)
                 prefix[j] = '\0';
             }
         }
+    }
+    if(found == 0) // no shared prefix found
+    {
+        prefix[0] = '\0';
     }
 }
 
