@@ -3,7 +3,7 @@
 #include "parser.h"
 
 /// @brief this functions purpose is to parse a given string
-///        according to a very specific set of rules
+///        according to a very specific set of rules, rules will follow
 /// @param text
 void parseInput(char *text, char **parsed)
 {
@@ -25,15 +25,16 @@ void parseInput(char *text, char **parsed)
             // new token
             if (mode == NORMAL)
             {
+                // this checks for consequtive seperators to avoid false tokens
                 if(*(text-1) == '\t')
                 {
                     text++;
                     break;
                 }
                 parsed[parseamt][idx] = '\0'; // terminates token 
-                parseamt++;
+                parseamt++;                   // opens new token
                 text++;
-                idx = 0;
+                idx = 0;                      // resets length for new token
                 break;
             }
             // space gets read as a normal sign, so it goes into the default case
@@ -52,15 +53,16 @@ void parseInput(char *text, char **parsed)
             // new token
             if (mode == NORMAL)
             {
+                // this checks for consequtive seperators to avoid false tokens
                 if(*(text-1) == 32)
                 {
                     text++;
                     break;
                 }
                 parsed[parseamt][idx] = '\0'; // terminates token 
-                parseamt++;
+                parseamt++;                   // opens new token
                 text++;
-                idx = 0;
+                idx = 0;                      // resets length for new token
                 break;
             }
             // space gets read as a normal sign, so it goes into the default case
@@ -71,11 +73,11 @@ void parseInput(char *text, char **parsed)
             break;
         case '"':
             switchModes(&mode,*text);
-            text++;
+            text++; // this skips the quotes so they dont land in the token
             break;
         case 39:
             switchModes(&mode,*text);
-            text++;
+            text++; // this skips the quotes so they dont land in the token
             break;
         /*
         case '$':
@@ -91,7 +93,7 @@ void parseInput(char *text, char **parsed)
         case '~':
         */
         
-        default:
+        default: // default case simply appends the current character to the current token
         append: // C doesnt allow goto default; so this is the fallthrough point for most functions
             parsed[parseamt][idx] = *text;
             idx++;
@@ -104,10 +106,10 @@ void parseInput(char *text, char **parsed)
 }
 
 /// @brief This function sets the current working mode of the parser.
-///        Single and Double respond to the respective sign, every
-///        other read sign will not affect the modes.
-///        In Normal mode every sign is taken processed their intended
-///        purpose. More documentation on special signs follows 
+///        Single and Double respond to the respective character, every
+///        other read character will not affect the modes.
+///        In Normal mode every character is taken processed their intended
+///        purpose. More documentation on special characters follows 
 /// @param mode 
 /// @param c 
 void switchModes(MODUS *mode, char c)

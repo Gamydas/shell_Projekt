@@ -14,7 +14,7 @@ typedef struct tabComp
 void initTab(tabComp* tab);
 int checkPurpose(shell* sh);
 void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path);
-void completeCommands(tabComp *tab, char* token, char (*builtins)[10]);
+void completeBuiltins(tabComp *tab, char* token, char (*builtins)[10]);
 void completeArgs(tabComp *tab, char *token, char *path);
 void completeExecs(tabComp *tab, char *token);
 void handleCases(tabComp *tab, char* token);

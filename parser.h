@@ -7,7 +7,6 @@ typedef enum
     DOUBLE_QUOTES,
     NORMAL
 
-
 } MODUS;
 
 void parseInput(char* text, char** parsed);

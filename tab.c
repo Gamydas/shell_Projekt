@@ -29,8 +29,15 @@ int checkPurpose(shell *sh)
     }
 }
 
-void completeCommands(tabComp *tab, char *token, char (*builtins)[10])
+/// @brief this function iterates over every builtin and looks for matches for the given token,
+///        these matches get saved in tab->matches and the matchcount gets incremented. 
+///        Should the token be empty every builtin is counted as a match
+/// @param tab 
+/// @param token 
+/// @param builtins 
+void completeBuiltins(tabComp *tab, char *token, char (*builtins)[10])
 {
+    // iterates over builtins array and saves matches to tab->matches
     for (int i = 0; i < 4; i++) // INCREASE THIS IF U ADD MORE BUILTINS!
     {
         if (strcomp(builtins[i], token) != -1)
@@ -67,7 +74,11 @@ void handleCases(tabComp *tab, char *token)
         findPrefix(tab->matches, token, 2048, 50);
     }
 }
-
+/// @brief this function iterates over all paths given by $PATH to look a matching executable
+///        which will then be written into tab->matches and matchcount will be increased.
+///        An empty token means every executable is a match
+/// @param tab 
+/// @param token 
 void completeExecs(tabComp *tab, char *token)
 {
     char* allpaths = malloc(strLen(getenv("PATH")) + 1); // allocates memory required (+1 for 0-byte)
@@ -76,26 +87,27 @@ void completeExecs(tabComp *tab, char *token)
         fprintf(stderr, "malloc failed\n");
         return;
     }
-    strcopy(getenv("PATH"), allpaths);
-    char temp[2048];
+    strcopy(getenv("PATH"), allpaths);          // makes a safely editable copy of $PATH
+    char temp[2048];                            // temp string to load singular paths per iteration
     initStr(temp, 0, sizeof(temp));
     int count = 0;
     for (int i = 0; i < strLen(getenv("PATH")); i++)
     {
+        // $PATH seperates pathes with : so if this is found a full path has been written into temp
         if(allpaths[i] == ':')
         {
             temp[count] = '\0';
             count = 0;
             completeArgs(tab, token, temp);
             initStr(temp, 0, sizeof(temp));
-        } else
+        } else // adds current character to the path string
         {
             temp[count] = allpaths[i];
             count++;
         }
         
     }
-    temp[count] = '\0';
+    temp[count] = '\0'; // final nullterminator
     completeArgs(tab, token, temp);
     free(allpaths);
 }
@@ -159,8 +171,10 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
         return; 
     } else if (tab->tabs > 2 && tab->matchcount > 1)
     {
+        // goes to next line
         printf("\r\n");
         fflush(stdout);
+        // prints out all matches, the formating on this is still off, will be fixed later
         for (int i = 0; i < tab->matchcount; i++)
         {
             printf("%-15s", tab->matches[i]);
@@ -193,7 +207,7 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
         {
             count++;
         } // clears out every seperator at the begging of the command
-        completeCommands(tab, &command[count], builtins);
+        completeBuiltins(tab, &command[count], builtins);
         if(tab->matchcount > 0)
         {
             return;
@@ -207,13 +221,6 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
     // entirely new token
     if (command[count] == 32)
     {
-        /*
-        // if tab is pressed on an empty argument
-        if(command[count + 1] == NULL) 
-        {
-            return;
-        }
-        */
         completeArgs(tab, &command[count + 1], path);
     }
     else if (command[count] == '/')
@@ -231,6 +238,7 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
             return;
         }
         // create a string to store the new pathname in
+        // count is the position of the / seperator and temp now of the space infront
         char *pathname = malloc(strLen(command) - temp);
         if (pathname == NULL)
         {
