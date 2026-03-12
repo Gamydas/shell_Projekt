@@ -68,8 +68,8 @@ void tlc(char *Text)
 int nstrcomp(char *first, char *second)
 {
     int i = 0;
-    char temp[strLen(first)];
-    char temp2[strLen(second)];
+    char temp[strLen(first) + 1];
+    char temp2[strLen(second) + 1];
     strcopy(first, temp);
     strcopy(second, temp2);
     tlc(temp);  // converts first to lowercase
