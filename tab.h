@@ -1,5 +1,4 @@
 #include <dirent.h>
-#include "shell.h"
 #ifndef TAB_H
 #define TAB_H
 
@@ -12,7 +11,6 @@ typedef struct tabComp
 } tabComp;
 
 void initTab(tabComp* tab);
-int checkPurpose(shell* sh);
 void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path);
 void completeBuiltins(tabComp *tab, char* token, char (*builtins)[10]);
 void completeArgs(tabComp *tab, char *token, char *path);

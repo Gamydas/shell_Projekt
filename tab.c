@@ -18,17 +18,6 @@ void initTab(tabComp *tab)
     }
 }
 
-/// @brief checks what purpose(bin complete, exec complete, argument complete) the tab press serves
-/// @param sh
-/// @return returns 0 if a bin is to be completed, 1 if its an exec and 2 if its arguments, i.e files or flags(later)
-int checkPurpose(shell *sh)
-{
-    if (sh->binflag == -1)
-    {
-        return 0;
-    }
-}
-
 /// @brief this function iterates over every builtin and looks for matches for the given token,
 ///        these matches get saved in tab->matches and the matchcount gets incremented. 
 ///        Should the token be empty every builtin is counted as a match
