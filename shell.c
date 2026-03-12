@@ -6,18 +6,14 @@
 void initShell(shell* sh)
 {
     // integer intitializations
-    sh->cursoridx = 0;
     sh->histpos = 0;
     sh->binamt = 4;
-    sh->binflag = -1;
 
     
     // str and buffer initializations
-    initStr(sh->cmd, 0, sizeof(sh->cmd));
     initStr(sh->wdir, 0, sizeof(sh->wdir));
     for (int i = 0; i < 50; i++)
     {
-        initStr(sh->buffer[i], 0, sizeof(sh->buffer[i]));
         initStr(sh->hist[i], 0, sizeof(sh->hist[i]));
         initStr(sh->builtins[i],0, sizeof(sh->builtins[0]));
     }
