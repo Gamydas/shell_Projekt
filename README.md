@@ -1,4 +1,4 @@
-In this project I am trying to create my own UNIX Shell.
+This is my attempt at a UNIX-Shell written in C. This is a learning project to deepen my understanding of the C language and learn new concepts like process creation and management and file descriptors. This shell, while not perfect, implements a variety of things such as the use of terminal raw mode for live input reading, a state-machine parser for quoting recognition, pipelining and redirection. This project does not use preexisting shell libraries.
 
 Installation: 
 - if you have downloaded all projectfiles including the makefile you can simply run make all and from then on ./shell to start up the shell
