@@ -181,8 +181,9 @@ void switchModes(MODUS *mode, char c)
 
 /// @brief this functions purpose is to parse a given string
 ///        according to a very specific set of rules, rules will follow
+/// @param text the raw input string handed given by input module
 /// @return returns 0 if succesful, -1 if not
-int parseInput(command *cmd_)
+int parseInput(command *cmd_, char* text)
 {
     ERR error = NO_ERROR;
     MODUS mode = NORMAL;
@@ -190,7 +191,6 @@ int parseInput(command *cmd_)
     int *parseamt = &cmd_->parseamt; // amount of parsed tokens; the first dimension of a char[][]
     int idx = 0;                     // length of currently parsed token; second dimension of char[][]
     int rdrct = 0;                   // if this is 0 no redirection was called, 1 if one was called
-    char *text = cmd_->cmd;          // copy of cmd string
     char token[PATH_MAX];            // a buffer to temporarily hold the token that is to be parsed
 
     while (*text)
@@ -518,26 +518,14 @@ int initCMD(command *cmd_)
         cmd_->redir[i].stream = -1;
         cmd_->redir[i].target = NULL;
     }
-    cmd_->cursoridx = 0;
+    
     cmd_->parseamt = 0;
-    cmd_->capac = 2048;
     cmd_->rdrctns = 0;
-    cmd_->cmd = NULL;
     cmd_->parsed = NULL;
-
-    cmd_->cmd = malloc(cmd_->capac); // base length, gets doubled via realloc if nessecary
-    if (cmd_->cmd == NULL)
-    {
-        perror("malloc");
-        return -1;
-    }
-    initStr(cmd_->cmd, 0, cmd_->capac);
-
-    cmd_->parsed = malloc(30 * sizeof(char *)); // base length, gets doubled if nessecary
+    cmd_->parsed = calloc(30, sizeof(char *)); // base length, gets doubled if nessecary
     if (cmd_->parsed == NULL)
     {
         perror("malloc");
-        free(cmd_->cmd);
         return -1;
     }
 
@@ -548,7 +536,6 @@ int initCMD(command *cmd_)
 /// @param cmd_
 void cleanupCMD(command *cmd_)
 {
-    free(cmd_->cmd);
     for (int i = 0; i < cmd_->parseamt; i++)
     {
         free(cmd_->parsed[i]);
