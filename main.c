@@ -28,14 +28,14 @@ int main(int argc, char *argv[])
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
-            printError(error, "main");
+            printError(error, "initRaw");
             continue;
         }
         control = initCMD(&instructions);
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
-            printError(error, "main");
+            printError(error, "initCMD");
             continue;
         }
         // loading the current directory into it wdir string
@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
             continue;
         }
         
-
         // seperating the command String into the seperate instructions
         control = parseInput(&instructions, userInput.cmd);
         if (control == -1)
@@ -57,10 +56,23 @@ int main(int argc, char *argv[])
             cleanupCMD(&instructions);
             continue;
         }
-        
-        // checks if pipelining is called and if so handles it and then contiunues the main loop
-        if(handlePipes(&instructions) == 0)
+        // is no longer needed for this loop
+        freeRaw(&userInput);
+        // this can happen in cases where user only types in ">"
+        // or other characters that are filtered out by the parser
+        if(instructions.parsed[0] == NULL)
         {
+            error = SYNTAX_ERROR;
+            printError(error, "newline");
+            error = NO_ERROR;
+            continue;
+        }
+        // checks if pipelining is called and if so handles it and then contiunues the main loop
+        if(instructions.pipecalls > 0)
+        {
+            // for 2 segments you only need 1 pipe thats why -1
+            handlePipes(instructions.pipes, instructions.pipecalls - 1);
+            cleanupCMD(&instructions);
             continue;
         }
         
