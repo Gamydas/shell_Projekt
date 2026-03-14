@@ -12,7 +12,11 @@ void printError(ERR error, char* context)
         fprintf(stderr, "syntax error near: '%s'\n", context);
         break;
     case INITIALIZATION_ERROR:
-        fprintf(stderr, "Initiliation error at: %s\n", context);
+        fprintf(stderr, "Initiliation error by: %s\n", context);
+        break;
+    case INVALID_ARGUMENT:
+        fprintf(stderr, "Invalid or missing Argument at: %s\n", context);
+
     default:
         break;
     }
