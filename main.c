@@ -7,22 +7,31 @@
 #include "shell.h"
 #include "input.h"
 #include "str.h"
-#include "buildtins.h"
+#include "builtins.h"
 #include "escapesequenzen.h"
 #include "parser.h"
 #include "err.h"
+#include "pipelining.h"
 
 int main(int argc, char *argv[])
 {
     ERR error = NO_ERROR;
     shell myShell;
-    command userInput;
+    rawInput userInput;
+    command instructions;         // parsed user instructions
     initShell(&myShell);
     CLEAR;
     HOME;
     while (1)
     {
-        int control = initCMD(&userInput);
+        int control = initRaw(&userInput);
+        if (control < 0)
+        {
+            error = INITIALIZATION_ERROR;
+            printError(error, "main");
+            continue;
+        }
+        control = initCMD(&instructions);
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
@@ -36,43 +45,42 @@ int main(int argc, char *argv[])
         control = getInput(&myShell, &userInput);
         if (control == -1)
         {
-            cleanupCMD(&userInput);
+            freeRaw(&userInput);
             continue;
         }
         
 
         // seperating the command String into the seperate instructions
-        control = parseInput(&userInput);
+        control = parseInput(&instructions, userInput.cmd);
         if (control == -1)
         {
-            cleanupCMD(&userInput);
+            cleanupCMD(&instructions);
             continue;
         }
-        /*
-        // checking for redirection operators
+        
         // checks if pipelining is called and if so handles it and then contiunues the main loop
-        if(handlePipes(&myShell) == 0)
+        if(handlePipes(&instructions) == 0)
         {
             continue;
         }
-        */
+        
         // exits main function
-        if (strcomp(userInput.parsed[0], "exit") == 0)
+        if (strcomp(instructions.parsed[0], "exit") == 0)
         {
-            cleanupCMD(&userInput);
+            cleanupCMD(&instructions);
             return 0;
         }
-        if ((strcomp(userInput.parsed[0], "cd")) == 0)
+        if ((strcomp(instructions.parsed[0], "cd")) == 0)
         {
-            cd(userInput.parsed[1]);
+            cd(instructions.parsed[1]);
         }
-        else if ((strcomp(userInput.parsed[0], "pwd")) == 0)
+        else if ((strcomp(instructions.parsed[0], "pwd")) == 0)
         {
             pwd();
         }
-        else if ((strcomp(userInput.parsed[0], "type")) == 0)
+        else if ((strcomp(instructions.parsed[0], "type")) == 0)
         {
-            type(userInput.parsed[1]);
+            type(instructions.parsed[1]);
         }
         else // not a buildt-in
         {
@@ -80,31 +88,31 @@ int main(int argc, char *argv[])
             if (rc < 0) // incase fork fails to execute
             {
                 perror("fork");
-                cleanupCMD(&userInput);
+                cleanupCMD(&instructions);
                 continue;
             }
             // child
             if (rc == 0)
             {
                 // if a redirection was called this dup2s alls nessecary file descriptors and closes them
-                for (int i = 0; i < userInput.rdrctns; i++)
+                for (int i = 0; i < instructions.rdrctns; i++)
                 {
-                    if (userInput.redir[i].direction == REDIR_OUT_TRUNC || userInput.redir[i].direction == REDIR_OUT_APPEND)
+                    if (instructions.redir[i].direction == REDIR_OUT_TRUNC || instructions.redir[i].direction == REDIR_OUT_APPEND)
                     {
-                        dup2(userInput.redir[i].stream, STDOUT_FILENO);
-                    } else if (userInput.redir[i].direction == REDIR_ERR_TRUNC || userInput.redir[i].direction == REDIR_ERR_APPEND)
+                        dup2(instructions.redir[i].stream, STDOUT_FILENO);
+                    } else if (instructions.redir[i].direction == REDIR_ERR_TRUNC || instructions.redir[i].direction == REDIR_ERR_APPEND)
                     {
-                        dup2(userInput.redir[i].stream, STDERR_FILENO);
-                    } else if (userInput.redir[i].direction == REDIR_IN)
+                        dup2(instructions.redir[i].stream, STDERR_FILENO);
+                    } else if (instructions.redir[i].direction == REDIR_IN)
                     {
-                        dup2(userInput.redir[i].stream, STDIN_FILENO);
+                        dup2(instructions.redir[i].stream, STDIN_FILENO);
                     }
-                    close(userInput.redir[i].stream);
+                    close(instructions.redir[i].stream);
                 }
                 
-                execvp(userInput.parsed[0], userInput.parsed);
-                fprintf(stderr, "%s: not a command\n", userInput.parsed[0]); // if execvp cannot find the given command
-                cleanupCMD(&userInput);
+                execvp(instructions.parsed[0], instructions.parsed);
+                fprintf(stderr, "%s: not a command\n", instructions.parsed[0]); // if execvp cannot find the given command
+                cleanupCMD(&instructions);
                 exit(1);                                                    // in case exec fails
             }
             else // parent
@@ -112,6 +120,6 @@ int main(int argc, char *argv[])
                 wait(0); // waits till child dies
             }
         }
-        cleanupCMD(&userInput);
+        cleanupCMD(&instructions);
     }
 }
