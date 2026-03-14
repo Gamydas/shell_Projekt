@@ -1,6 +1,6 @@
 CC = gcc 
 PRG = shell
-OBJ = main.o input.o str.o buildtins.o tools.o shell.o tab.o parser.o err.o
+OBJ = main.o input.o str.o builtins.o tools.o shell.o tab.o parser.o err.o pipelining.o
 
 
 $(PRG): $(OBJ)
