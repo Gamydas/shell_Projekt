@@ -20,6 +20,7 @@ int initRaw(rawInput *input)
         perror("malloc");
         return -1;
     }
+    return 0;
 }
 
 /// @brief frees an object of type rawInput
