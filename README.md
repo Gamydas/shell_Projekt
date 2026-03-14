@@ -22,8 +22,7 @@ General:
 - there might be certain inputs that still cause unwanted behaviour in the shell, but every input that does that that I am aware of is now handled so the shell should work smoothly now
 
 Known problems:
-- Code is missing some documentation as of 11.03.2026, that will be fixed ASAP
-
+- a quoted token i.e "foo" needs a space after the second quote before pressing enter, will fix this soon
 Limitations and Syntax:
 General Syntax
 - sequential commands via ; and background execution via & are not yet implemented
