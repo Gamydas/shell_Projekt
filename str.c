@@ -185,12 +185,12 @@ int parseStr(char *Text, char **arr)
     return arri;
 }
 
-/// @brief function finds the greates shared prefix in a 2D char arrays and writes it into prefix
-/// @param arr 
+/// @brief function finds the greates shared prefix in a char**, i.e a string array
+///        and writes it into prefix
+/// @param arr char**
 /// @param prefix 
 /// @param length first dimension of array
-/// @param width second dimension of array
-void findPrefix(char (*arr)[2048], char* prefix, int width, int length)
+void findPrefix(char** arr, char* prefix, int length)
 {
     int found = 0;                                
     int brk = 0;                                 // flag to break out of outer for loop
@@ -200,7 +200,7 @@ void findPrefix(char (*arr)[2048], char* prefix, int width, int length)
         {
             break;
         }
-        for (int j = found; j < width; j++)      // 256 comes from the calling funtion tabComplete, might make this more generally usable in the future
+        for (int j = found; j < strLen(arr[i]); j++)      // 256 comes from the calling funtion tabComplete, might make this more generally usable in the future
         {
             if (arr[0][j] == arr[i][j])
             {

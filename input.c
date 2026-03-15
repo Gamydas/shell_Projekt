@@ -149,12 +149,12 @@ void reposCurs(int cursoridx)
 int getInput(shell *sh, rawInput *cmd_)
 {
     tabComp tab;
+    // at this point only this field is relevant to initialize, remaining fields get initialized when needed
+    tab.tabs = 0;                   
     int len = 0;                    // variable checks how long the currently typed cmd is
     int anc = strLen(sh->wdir) + 2; // varible to memorize the beggining of the user editable part of the cmd line
     char c = '\0';
     cmd_->cursoridx = anc; // positions cursor at the first user eligable position
-
-    initTab(&tab);
     tcsetattr(0, TCSANOW, &sh->raw); // enters raw mode
 
     printf("%s: ", sh->wdir); // display prompt
@@ -183,8 +183,11 @@ int getInput(shell *sh, rawInput *cmd_)
                 initTab(&tab);
             }
             tab.tabs++;
-            tabComplete(&tab, sh->builtins, cmd_->cmd, sh->wdir);
-
+            int cntrl = tabComplete(&tab, sh->builtins, cmd_->cmd, sh->wdir);
+            if (cntrl < 0)
+            {
+                continue;
+            }
             // refreshes screen
             printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
             fflush(stdout);
@@ -204,8 +207,7 @@ int getInput(shell *sh, rawInput *cmd_)
                 strcopy(cmd_->cmd, sh->hist[sh->histpos]);
                 sh->histpos++;
             }
-
-            tab.tabs = 0; // resets Tab counter
+            if (tab.tabs > 0) cleanupTab(&tab); // avoid memory leaks 
             printf("\r\n");
             fflush(stdout);
             tcsetattr(0, TCSANOW, &sh->canon); // exits raw mode
@@ -218,7 +220,7 @@ int getInput(shell *sh, rawInput *cmd_)
             */
             return strLen(cmd_->cmd);
         case 127:
-            tab.tabs = 0; // resets Tab counter
+            if (tab.tabs > 0) cleanupTab(&tab); // avoid memory leaks 
             if (cmd_->cursoridx > anc)
             {
                 len--;
@@ -250,7 +252,7 @@ int getInput(shell *sh, rawInput *cmd_)
             reposCurs(cmd_->cursoridx);
 
             len = strLen(cmd_->cmd);
-            tab.tabs = 0; // resets Tab counter
+            if (tab.tabs > 0) cleanupTab(&tab); // avoid memory leaks 
 
             break;
         default:
@@ -289,7 +291,7 @@ int getInput(shell *sh, rawInput *cmd_)
             fflush(stdout);
             reposCurs(cmd_->cursoridx);
 
-            tab.tabs = 0; // resets Tab counter
+            if (tab.tabs > 0) cleanupTab(&tab); // avoid memory leaks 
             break;
         }
     }

@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
     rawInput userInput;
     command instructions;         // parsed user instructions
     initShell(&myShell);
+    int ID;                       // this is used to determine wether a process is a child or not
     CLEAR;
     HOME;
     while (1)
@@ -71,26 +72,35 @@ int main(int argc, char *argv[])
         if(instructions.pipecalls > 0)
         {
             // for 2 segments you only need 1 pipe thats why -1
-            handlePipes(instructions.pipes, instructions.pipecalls - 1);
-            cleanupCMD(&instructions);
-            continue;
+            ID = setupPipeline(instructions.pipes, instructions.pipecalls - 1);
+            if(ID < 0 )
+            {
+                cleanupCMD(&instructions);
+                continue;
+            }
         }
         
         // exits main function
         if (strcomp(instructions.parsed[0], "exit") == 0)
         {
+            
             cleanupCMD(&instructions);
+            if(ID == 1)
+            {
+                exit(0);
+            }
             return 0;
         }
-        if ((strcomp(instructions.parsed[0], "cd")) == 0)
+        int comp = 0;
+        if ((comp = strcomp(instructions.parsed[0], "cd")) == 0)
         {
             cd(instructions.parsed[1]);
         }
-        else if ((strcomp(instructions.parsed[0], "pwd")) == 0)
+        else if ((comp = strcomp(instructions.parsed[0], "pwd")) == 0)
         {
             pwd();
         }
-        else if ((strcomp(instructions.parsed[0], "type")) == 0)
+        else if ((comp = strcomp(instructions.parsed[0], "type")) == 0)
         {
             type(instructions.parsed[1]);
         }
@@ -133,5 +143,9 @@ int main(int argc, char *argv[])
             }
         }
         cleanupCMD(&instructions);
+        if(ID == 1)
+        {
+            exit(comp);
+        }
     }
 }

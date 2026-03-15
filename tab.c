@@ -5,40 +5,78 @@
 #include "tab.h"
 #include "str.h"
 #include "shell.h"
+#include "tools.h"
 
 /// @brief initializes a tabComp structure
 /// @param tab
-void initTab(tabComp *tab)
+/// @return returns 0 on success, -1 on failure
+int initTab(tabComp *tab)
 {
     tab->matchcount = 0;
     tab->tabs = 0;
-    for (int i = 0; i < 50; i++)
+    /* this is the starting capacity for the matches array 
+       this will be doubled every time it reaches the maximum */
+    tab->capac = 5; 
+    tab->matches = malloc(tab->capac * sizeof(char*));
+    if(tab->matches == NULL)
     {
-        initStr(tab->matches[i], 0, 2048);
+        perror("malloc");
+        return -1;
     }
+    return 0;
 }
+
+void cleanupTab(tabComp *tab)
+{
+    // checks if there are matches to be freed
+    for (int i = 0; i < tab->matchcount; i++)
+    {
+        free(tab->matches[i]);
+    }
+    free(tab->matches);
+}
+
 
 /// @brief this function iterates over every builtin and looks for matches for the given token,
 ///        these matches get saved in tab->matches and the matchcount gets incremented. 
 ///        Should the token be empty every builtin is counted as a match
 /// @param tab 
 /// @param token 
-/// @param builtins 
-void completeBuiltins(tabComp *tab, char *token, char (*builtins)[10])
+/// @param builtins
+/// @return 0 if everythin was succesfull, -1 if error occured
+int completeBuiltins(tabComp *tab, char *token, char (*builtins)[10])
 {
+    
     // iterates over builtins array and saves matches to tab->matches
     for (int i = 0; i < 4; i++) // INCREASE THIS IF U ADD MORE BUILTINS!
     {
         if (strcomp(builtins[i], token) != -1)
         {
             int temp = strLen(builtins[i]);
+            // checks if capacity needs to be increased
+            if (tab->matchcount == tab->capac - 1) // -1 because of sentinel slot
+            {
+                int cntrl = increaseCapacity(tab->matches, &tab->capac);
+                if (cntrl < 0)
+                {
+                    return -1;
+                }
+            }
+            // allocates space for the found match including appended space and null terminator
+            tab->matches[tab->matchcount] = malloc(temp + 2);
+            if(tab->matches[tab->matchcount] == NULL)
+            {
+                perror("malloc");
+                return -1;
+            }
             strcopy(builtins[i], tab->matches[tab->matchcount]);
             tab->matches[tab->matchcount][temp] = 32;
             tab->matches[tab->matchcount][temp + 1] = '\0';
             tab->matchcount++;
         }
     }
-    handleCases(tab, token);
+    return 0;
+    //handleCases(tab, token);
 }
 
 /// @brief function to handle the 3 possible cases of tabComplete
@@ -60,21 +98,24 @@ void handleCases(tabComp *tab, char *token)
     {
         printf("\a");
         fflush(stdout);
-        findPrefix(tab->matches, token, 2048, 50);
+        /// THIS NEEDS TO BE LOOKED OVER; NO LONGER A STATIC ARRAY!!!
+        findPrefix(tab->matches, token, tab->capac);
     }
 }
+
 /// @brief this function iterates over all paths given by $PATH to look a matching executable
 ///        which will then be written into tab->matches and matchcount will be increased.
 ///        An empty token means every executable is a match
 /// @param tab 
 /// @param token 
-void completeExecs(tabComp *tab, char *token)
+/// @return 0 if everythin was succesfull, -1 if error occured
+int completeExecs(tabComp *tab, char *token)
 {
     char* allpaths = malloc(strLen(getenv("PATH")) + 1); // allocates memory required (+1 for 0-byte)
     if(allpaths == NULL)
     {
-        fprintf(stderr, "malloc failed\n");
-        return;
+        perror("malloc");
+        return -1;
     }
     strcopy(getenv("PATH"), allpaths);          // makes a safely editable copy of $PATH
     char temp[2048];                            // temp string to load singular paths per iteration
@@ -87,8 +128,13 @@ void completeExecs(tabComp *tab, char *token)
         {
             temp[count] = '\0';
             count = 0;
-            completeArgs(tab, token, temp);
-            initStr(temp, 0, sizeof(temp));
+            int cntrl = completeArgs(tab, token, temp);
+            if (cntrl < 0)
+            {
+                free(allpaths); // avoids memory leak
+                return -1;
+            }
+            initStr(temp, 0, sizeof(temp)); // resets temp string
         } else // adds current character to the path string
         {
             temp[count] = allpaths[i];
@@ -97,54 +143,87 @@ void completeExecs(tabComp *tab, char *token)
         
     }
     temp[count] = '\0'; // final nullterminator
-    completeArgs(tab, token, temp);
+    int cntrl = completeArgs(tab, token, temp);
     free(allpaths);
+    if (cntrl < 0)
+    {
+        return -1;
+    }
+    return 0;
 }
 
-void completeArgs(tabComp *tab, char *token, char *path)
+/// @brief this function opens up a directory(opendir) to iterate over via readdir()
+///        and simultaniously runs a string by string comparison on the returned directories.
+///        Every match gets stored in tabs->matches, direcotirs get a '/' appended, every other 
+///        file gets a space appended
+/// @param tab 
+/// @param token 
+/// @param path 
+/// @return 0 if everythin was succesfull, -1 if error occured
+int completeArgs(tabComp *tab, char *token, char *path)
 {
     DIR *current = opendir(path);
     // not a directory
     if(current == NULL)
     {
-        return;
+        perror("opendir");
+        return -1;
     }
     struct dirent *compare = NULL;
 
-    int i = tab->matchcount;
+    int* i = &tab->matchcount;
     while ((compare = readdir(current)) != NULL)
     {
         if (strcomp(token, compare->d_name) != -1)
         {
-            strcopy(compare->d_name, tab->matches[i]);
-            tab->matchcount++;
-
+            if(*i == tab->capac -1)
+            {
+                int contrl = increaseCapacity(tab->matches, &tab->capac);
+                if(contrl < 0)
+                {
+                    return -1;
+                }
+            }
+            // + 2 for appended / or space and \0
             int temp = strLen(compare->d_name);
+            tab->matches[*i] = malloc(temp + 2);
+            if (tab->matches[*i] == NULL)
+            {
+                perror("malloc");
+                return -1; 
+            }
+            strcopy(compare->d_name, tab->matches[*i]);
+
+            
 
             // appends slash to folders/directories
             if (compare->d_type == DT_DIR)
             {
-                tab->matches[i][temp] = '/';
-                tab->matches[i][temp + 1] = '\0';
+                tab->matches[*i][temp] = '/';
+                tab->matches[*i][temp + 1] = '\0';
             }
             else // appends a space to all other files
             {
-                tab->matches[i][temp] = 32;
-                tab->matches[i][temp + 1] = '\0';
+                tab->matches[*i][temp] = 32;
+                tab->matches[*i][temp + 1] = '\0';
             }
-            i++;
+            (*i)++;
         }
     } /* iterates over every file in the current directory
          looks for partial or complete matches, which are then
          put into the matches array, then increments matchcount */
 
-    handleCases(tab, token);
+    //handleCases(tab, token);
 
     closedir(current);
+    return 0;
 }
 
-void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
-{ 
+/// @brief this function, when called, checks the tab->tabs counter, and handles the
+///        the appropriate cases 
+/// @param tab 
+void checkTabAmount(tabComp *tab)
+{
     // there is only one match, so ring bell and do nothing
     if (tab->tabs > 1 && tab->matchcount == 1)
     {
@@ -178,8 +257,18 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
         fflush(stdout);
         return;
     }
-    
+}
 
+/// @brief this function handles filtering the to be completed token and dispatching it to
+///        the appropriate case
+/// @param tab 
+/// @param builtins 
+/// @param command 
+/// @param path 
+/// @return 0 if success, -1 if an error occured
+int tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
+{ 
+    checkTabAmount(tab);
 
     int count = strLen(command) - 1; // -1 to avoid overflows when used as index
 
@@ -196,45 +285,65 @@ void tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path)
         {
             count++;
         } // clears out every seperator at the begging of the command
-        completeBuiltins(tab, &command[count], builtins);
+        int cntrl = completeBuiltins(tab, &command[count], builtins);
+        if (cntrl < 0)
+        {
+            return -1;
+        }
         if(tab->matchcount > 0)
         {
-            return;
+            handleCases(tab, &command[count]);
+            return 0;
         } else
         {
-            completeExecs(tab, &command[count]);
-            return;
+            cntrl = completeExecs(tab, &command[count]);
+            if (cntrl < 0)
+            {
+                return -1;
+            }
+            handleCases(tab, &command[count]);
+            return 0;
         } 
     }
 
     // entirely new token
     if (command[count] == 32)
     {
-        completeArgs(tab, &command[count + 1], path);
+        int cntrl = completeArgs(tab, &command[count + 1], path);
+        if (cntrl < 0)
+        {
+            return -1;
+        }
     }
-    else if (command[count] == '/')
+    else if (command[count] == '/') // check for nested path  
     {
         int temp = count;
         while (command[temp] != 32 && temp > 0)
         {
             temp--;
         } // goes to beginning of token
-        // nothing to complete wa found
+        // nothing to complete was found
         if (temp == 0)
         {
             printf("\a");
             fflush(stdout);
-            return;
+            return 0;
         }
         // create a string to store the new pathname in
         // count is the position of the / seperator and temp now of the space infront
         char *pathname = malloc(strLen(command) - temp);
         if (pathname == NULL)
         {
-            fprintf(stderr, "Error occured while mallocing\n");
+            perror("malloc");
+            return -1;
         }
         strcopySeg(command, pathname, temp + 1, count); // temp is now a space so + 1 to get first letter of token
-        completeArgs(tab, &command[count + 1], pathname);
+        int cntrl = completeArgs(tab, &command[count + 1], pathname);
         free(pathname);
+        if (cntrl < 0)
+        {
+            return -1;
+        }
     }
+    handleCases(tab, &command[count + 1]);
 }
