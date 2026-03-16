@@ -1,5 +1,8 @@
 #ifndef STR_H
 #define STR_H
+
+#define PATH_MAX 4096 // my system doesnt find PATH_MAX in limits.h itll be defined locally here
+
 void strcopy(char* origin, char* destination);
 int nstrcomp(char*, char*);
 int strcomp(char*, char*);
