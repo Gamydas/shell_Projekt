@@ -3,5 +3,5 @@
 int findMin(int*, int);
 int findMax(int*, int);
 int findMinXn1(int*, int);
-int increaseCapacity(char** array, int* capac);
+char** doubleCapacity(char** array, int* capac);
 #endif 

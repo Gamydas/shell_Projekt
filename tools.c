@@ -1,21 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/// @brief increases the capacity of char** i.e a sting array 
+/// @brief doubles the capacity of char** i.e a sting array 
 /// @param array 
 /// @param capac 
-/// @return 0 if success, -1 if error
-int increaseCapacity(char** array, int* capac)
+/// @return returns pointer to realloced memory, NULL if realloc failed. Caller has to run a NULL check
+char** doubleCapacity(char** array, int* capac)
 {
-    (*capac) *= 2; // doubles given capacity
-    char** temp = realloc(array, *capac * sizeof(char*));
-    if (temp == NULL)
+    
+    char** temp = realloc(array, (2 * (*capac)) * sizeof(char*));
+    if(temp != NULL)
     {
-        perror("realloc");
-        return -1;
+        (*capac) *= 2; // doubles given capacity on success
     }
-    array = temp;
-    return 0;
+    return temp;
 
 }
 
