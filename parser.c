@@ -9,7 +9,6 @@
 #include "redirect.h"
 #include "pipelining.h"
 
-#define PATH_MAX 4096 // my system doesnt find PATH_MAX in limits.h itll be defined locally here
 
 /// @brief This function sets the current working mode of the parser.
 ///        Single and Double respond to the respective character, every
