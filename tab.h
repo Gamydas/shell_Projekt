@@ -12,9 +12,9 @@ typedef struct tabComp
 } tabComp;
 
 int initTab(tabComp* tab);
-int tabComplete(tabComp *tab, char (*builtins)[10], char *command, char *path);
-int completeBuiltins(tabComp *tab, char* token, char (*builtins)[10]);
-int completeArgs(tabComp *tab, char *token, char *path);
+int tabComplete(tabComp *tab, char (*builtins)[10], int binamt, char *command, char *path);
+int completeBuiltins(tabComp *tab, char* token, char (*builtins)[10], int binamt);
+int completeArgs(tabComp *tab, char *token, char *path, int isExec);
 int completeExecs(tabComp *tab, char *token);
 void handleCases(tabComp *tab, char* token);
 void checkTabAmount(tabComp *tab);
