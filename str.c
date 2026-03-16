@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "str.h"
 
+
+
 /// @brief function copies contents of origin into dest
 /// @param origin original message that is to be copied
 /// @param dest destination of the copy command
@@ -93,7 +95,7 @@ int nstrcomp(char *first, char *second)
 /// @brief case-sensitvely compares 2 strings
 /// @param first
 /// @param second
-/// @return returns 0 if both strings are identical, -1 otherwise and 1 if identical to the end of one shorter string
+/// @return returns 0 if both strings are identical, -1 otherwise and 1 if identical to the end of the first one i.e it was shorter but identical to the end
 int strcomp(char *first, char *second)
 {
     int i = 0;
@@ -108,6 +110,10 @@ int strcomp(char *first, char *second)
 
     if (*(first + i) != *(second + i)) // checks if one of the strings was shorter and thus not identical
     {
+        if(strLen(second) < strLen(first))
+        {
+            return -1;
+        }
         return 1;
     }
     return 0;
@@ -189,18 +195,18 @@ int parseStr(char *Text, char **arr)
 ///        and writes it into prefix
 /// @param arr char**
 /// @param prefix 
-/// @param length first dimension of array
-void findPrefix(char** arr, char* prefix, int length)
+/// @param size first dimension of array
+void findPrefix(char** arr, char* prefix, int size)
 {
     int found = 0;                                
     int brk = 0;                                 // flag to break out of outer for loop
-    for (int i = 1; i < length; i++)
+    for (int i = 1; i < size; i++)
     {
         if (brk)
         {
             break;
         }
-        for (int j = found; j < strLen(arr[i]); j++)      // 256 comes from the calling funtion tabComplete, might make this more generally usable in the future
+        for (int j = found; j < strLen(arr[0]); j++)      // 256 comes from the calling funtion tabComplete, might make this more generally usable in the future
         {
             if (arr[0][j] == arr[i][j])
             {
