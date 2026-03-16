@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     rawInput userInput;
     command instructions;         // parsed user instructions
     initShell(&myShell);
-    int ID;                       // this is used to determine wether a process is a child or not
+    int ID = 0;                       // this is used to determine wether a process is a child or not
     CLEAR;
     HOME;
     while (1)
@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
             error = NO_ERROR;
             continue;
         }
+        /*
         // checks if pipelining is called and if so handles it and then contiunues the main loop
         if(instructions.pipecalls > 0)
         {
@@ -79,7 +80,8 @@ int main(int argc, char *argv[])
                 continue;
             }
         }
-        
+        */
+       
         // exits main function
         if (strcomp(instructions.parsed[0], "exit") == 0)
         {
