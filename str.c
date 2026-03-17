@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "str.h"
 
 
@@ -63,35 +64,6 @@ void tlc(char *Text)
     }
 }
 
-/// @brief case-insensitvely compares 2 strings
-/// @param first
-/// @param second
-/// @return returns 0 if both strings are identical, -1 otherwise
-int nstrcomp(char *first, char *second)
-{
-    int i = 0;
-    char temp[strLen(first) + 1];
-    char temp2[strLen(second) + 1];
-    strcopy(first, temp);
-    strcopy(second, temp2);
-    tlc(temp);  // converts first to lowercase
-    tlc(temp2); // converts second to lowercase
-    while (*(temp + i) && *(temp2 + i))
-    {
-        if (*(temp + i) != *(temp2 + i)) // checks if first and second are identical char by char
-        {
-            return -1;
-        }
-        i++;
-    }
-
-    if (*(temp + i) != *(temp2 + i)) // checks if one of the strings was shorter and thus not identical
-    {
-        return -1;
-    }
-    return 0;
-}
-
 /// @brief case-sensitvely compares 2 strings
 /// @param first
 /// @param second
@@ -118,78 +90,7 @@ int strcomp(char *first, char *second)
     }
     return 0;
 }
-/* function has been retired(I found a way simpler solution)
-/// @brief specific niche function to make my life easier redirecting filestreams
-/// @param first
-/// @param second
-/// @param flag flag to be changed
-/// @param number number that will be assigned to flag in case comparison is succesful
-/// @return returns 0 if both strings are identical, -1 otherwise
-int flagstrcomp(char* first, char* second, int* flag, int number)
-{
-    int i = 0;
-    while(*(first + i) && *(second + i))
-    {
-        if(*(first + i) != *(second + i))                  // checks if first and second are identical char by char
-        {
-            return -1;
-        }
-        i++;
-    }
 
-    if(*(first + i) != *(second + i))                      // checks if one of the strings was shorter and thus not identical
-    {
-        return -1;
-    }
-    //checking which flag is eligable
-        *flag = number;
-    return 0;
-}
-*/
-/// @brief function seperates a string into segments which are indicated by spaces
-/// @param Text string to be seperated into segments
-/// @param arr  array in which the segments are to be stored, first dimension for indices second for the parts of the string
-/// @return returns the amount of seperations if parsing was successful, -1 otherwise
-int parseStr(char *Text, char **arr)
-{
-    int i = 0;    // index variable
-    int arri = 0; // array index variable
-    int temp = 0; // helper variable for copystrSeg
-    while (*(Text + i))
-    {
-
-        if (*(Text + i) == 32)
-        {
-            if (i == 0) // clears out spaces at the beginning of the STR
-            {
-                while (*(Text + i) == 32)
-                {
-                    i++;
-                }
-                temp = i; // remembers start point of the str
-                continue;
-            }
-            if ((strcopySeg(Text, arr[arri], temp, i - 1))) // i - 1 so the space does not get copied aswell
-            {
-                return -1; // error occured while segmenting the string
-            }
-            arri++;
-            while (*(Text + i) == 32) // clears out the remaining spaces
-            {
-                i++;
-            }
-            temp = i;
-        }
-        i++;
-    }
-    if ((strcopySeg(Text, arr[arri], temp, i - 1))) // i - 1 so the nullterminator does not get copied aswell
-    {
-        return -1; // error occured while segmenting the string
-    }
-    arri++;
-    arr[arri] = NULL; // marks end of instruction array
-    return arri;
-}
 
 /// @brief function finds the greates shared prefix in a char**, i.e a string array
 ///        and writes it into prefix
@@ -202,28 +103,21 @@ void findPrefix(char** arr, char* prefix, int size)
     int brk = 0;                                 // flag to break out of outer for loop
     for (int i = 1; i < size; i++)
     {
-        if (brk)
+
+        for (int j = 0; j < strLen(arr[0]); j++)    
         {
-            break;
-        }
-        for (int j = found; j < strLen(arr[0]); j++)      // 256 comes from the calling funtion tabComplete, might make this more generally usable in the future
-        {
-            if (arr[0][j] == arr[i][j])
+            if (arr[0][j] == arr[i][j] && j == found)
             {
                 prefix[j] = arr[0][j];
                 found++;
-            }
-            else
+            } else if(arr[0][j] != arr[i][j])
             {
-                brk = 1;
-                prefix[j] = '\0';
+                break;
             }
         }
     }
-    if(found == 0) // no shared prefix found
-    {
-        prefix[0] = '\0';
-    }
+    // appends 0 to the end of found prefix, if found 0 this also just inserts a 0
+    prefix[found] = '\0';
 }
 
 /// @brief counts every character in a string
@@ -255,14 +149,14 @@ void delInStr(char* text, int idx)
 }
 
 /// @brief inserts a character into a string at a given index
-/// @param text 
+/// @param text  
 /// @param c character to be inserted
 /// @param idx index at which the character is to be inserted
-/// @param size size of text
+/// @param size length of text
 void insertInStr(char* text, char c, int idx, int size)
 {
     // checking if idx is within bounds of the string size(-1 to make sure character fits the string)
-    if(idx >= size - 1 || idx <0) 
+        if(idx >= size|| idx <0) 
     {
         fprintf(stderr, "index out of bounds\n");
         return;
@@ -299,4 +193,38 @@ void initStr(char* text, int c, int size)
         text[i] = c;
     }
     
+}
+
+/// @brief increases the capacity of char** i.e a sting array and reallocs new memory for that char**
+/// @param array
+/// @param capac current capacity that is to be increased
+/// @param amt   amt that is to be added to capac
+/// @return returns 0 on success and -1 on failure
+int increaseCapac(char*** array, int* capac, int amt)
+{
+    char** temp = realloc(*array, (*capac + amt) * sizeof(char*));
+    if (temp == NULL)
+    {
+        perror("realloc");
+        return -1;
+    }
+    *array = temp;
+    *capac += amt;  // adds amt to capac on success
+    return 0;
+}
+
+/// @brief this function allocates memory the size of strlen(*origin + 1) for dest and copys origin into dest
+/// @param origin 
+/// @param dest 
+/// @return return 0 if success, -1 if failue
+int allocStrCopy(char* origin, char** dest)
+{
+    *dest =  malloc(strLen(origin) + 1);  // +1 for \0
+    if (*dest == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+    strcopy(origin, *dest);
+    return 0;
 }
