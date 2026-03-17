@@ -1,9 +1,8 @@
-#include <termios.h>
-#include <unistd.h>
-
 #ifndef SHELL_H
 #define SHELL_H
-
+#include <termios.h>
+#include <unistd.h>
+#include "builtins.h"
 typedef struct shell
 {
     char wdir[2048];                   // string for working directory 
@@ -12,7 +11,7 @@ typedef struct shell
     int binamt;                           // indicates the amount of builtins
     int histpos;                       // index for hist array
     
-    
+    Builtin* bins;                   // always make this 1 larger than binamt for Sentinel
     struct termios canon;
     struct termios raw;
     

@@ -1,6 +1,5 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include "pipelining.h"
 #include "redirect.h"
 
 typedef enum
@@ -11,19 +10,37 @@ typedef enum
 
 } MODUS;
 
+typedef enum
+{
+    NO_CONNECTOR,  // value to use when initializing
+    PIPE,          // | pipe
+    SEQ,           // ; sequential operator
+    END            // no connector found
+} CONNECTOR;
 
 typedef struct parsedInput
 {
-    char** parsed;      // array in which parsed tokens will be saved
-    int parseamt;       // current fill amount of parsed, also used to check memory size reallocations
-    redirect redir[10]; // why would you ever need more than 10 in 1 cmd
-    int rdrctns;        // amount of redirectons
-    pipeline* pipes;    // stores nessecary information for pipelining
-    int pipecalls;      // amount of pipecalls, not an index so -1 if u want to use it as that
-} command;
+    char **args;         // array in which parsed tokens will be saved
+    int parseamt;        // current fill amount of parsed
+    int capac;           // capacity of parsed array, i.e amount of currently allocated slots
+    redirect redir[10];  // why would you ever need more than 10 in 1 cmd
+    int rdrctns;         // amount of redirectons
+} Instructions;
 
-int parseInput(command* cmd_, char* text);
+typedef struct
+{
+    Instructions *instructs;  // array of instructions, I.e every token until a connector is found
+    CONNECTOR *connects;      // array of connectors, connects[0] is the connector between instructs[0] and instructs[1]
+    int size;                 // size of given instruc list
+} InstructList;
+
+int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect);
+int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR connect);
+int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type);
+int parseInput(InstructList *list, char *text);
 void switchModes(MODUS *mode, char c);
-int initCMD(command* cmd_);
-void cleanupCMD(command* cmd_);
+int initInstructs(Instructions *instructs);
+int initInstructList(InstructList *list);
+void cleanupInstructs(Instructions *instructs);
+void cleanupInstructList(InstructList *list);
 #endif

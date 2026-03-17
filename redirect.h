@@ -8,7 +8,8 @@ typedef enum
     REDIR_OUT_APPEND,  // stands for >>
     REDIR_ERR_TRUNC,   // stands for 2>
     REDIR_ERR_APPEND,  // stands for 2>>
-    REDIR_IN           // stands for <
+    REDIR_IN,          // stands for <
+    END_NEXT           // nessecary for parsing
 } REDIR;
 
 typedef struct redirect
@@ -19,7 +20,8 @@ typedef struct redirect
 } redirect;
 
 int switchDirect(REDIR *dir, char* token, int size);
-int redirection(redirect *dir);
+int handleRedirections(redirect *dir);
+int setUpRedir(redirect* redir, char* target, REDIR *type);
 
 
 

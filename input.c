@@ -1,21 +1,23 @@
-#include <stdio.h>
-#include <termios.h>
-#include <stdlib.h>
-#include "shell.h"
-#include "str.h"
-#include "escapesequenzen.h"
-#include "tab.h"
 #include "input.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+
+#include "escapesequenzen.h"
+#include "shell.h"
+#include "str.h"
+#include "tab.h"
+
 /// @brief initializes struct of rawInput type
-/// @param input 
+/// @param input
 /// @return 0 for success, -1 for error
-int initRaw(rawInput *input)
+int initRaw(rawInput* input)
 {
-    input->capac = 2048; // base capacity of input string, will be doubled if needed
+    input->capac = 2048;  // base capacity of input string, will be doubled if needed
     input->cursoridx = 0;
     input->cmd = calloc(1, input->capac);
-    if(input->cmd == NULL)
+    if (input->cmd == NULL)
     {
         perror("malloc");
         return -1;
@@ -24,8 +26,8 @@ int initRaw(rawInput *input)
 }
 
 /// @brief frees an object of type rawInput
-/// @param input 
-void freeRaw(rawInput *input)
+/// @param input
+void freeRaw(rawInput* input)
 {
     free(input->cmd);
 }
@@ -34,95 +36,95 @@ void freeRaw(rawInput *input)
 /// @param sh
 /// @param cmd_
 /// @return 0 if success, -1 if an error occured
-int handleArrows(shell *sh, rawInput *cmd_)
+int handleArrows(shell* sh, rawInput* cmd_)
 {
     char c = '\0';
     int rd = read(0, &c, 1);
-    if (rd < 0) // checks failed read
+    if (rd < 0)  // checks failed read
     {
         perror("read");
         return -1;
     }
-    else if (rd == 0) // checks end of file
+    else if (rd == 0)  // checks end of file
     {
         return -1;
     }
 
-    if (c != '[') // all arrow keys begin with \033[
+    if (c != '[')  // all arrow keys begin with \033[
     {
-        return 0; // there are escape sequences that dont follow with [ so no -1
+        return 0;  // there are escape sequences that dont follow with [ so no -1
     }
     else
     {
         int rd = read(0, &c, 1);
-        if (rd < 0) // checks failed read
+        if (rd < 0)  // checks failed read
         {
             perror("read");
             return -1;
         }
-        else if (rd == 0) // checks end of file
+        else if (rd == 0)  // checks end of file
         {
             return -1;
         }
 
         switch (c)
         {
-        case 'A': // arrow up
-            if (sh->histpos == 0)
-            {
-                printf("\a");
-                fflush(stdout);
+            case 'A':  // arrow up
+                if (sh->histpos == 0)
+                {
+                    printf("\a");
+                    fflush(stdout);
+                    break;
+                } /* checks if oldest command has been reached*/
+                if (sh->histpos > 0)
+                {
+                    strcopy(cmd_->cmd, sh->hist[sh->histpos]);                   // saves current input in history at histpos
+                    sh->histpos--;                                               // goes back into hist by 1
+                    strcopy(sh->hist[sh->histpos], cmd_->cmd);                   // copies previous instruction into the command
+                    cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  // repositioning cursoridx
+                }
                 break;
-            } /* checks if oldest command has been reached*/
-            if (sh->histpos > 0)
-            {
-                strcopy(cmd_->cmd, sh->hist[sh->histpos]);                  // saves current input in history at histpos
-                sh->histpos--;                                              // goes back into hist by 1
-                strcopy(sh->hist[sh->histpos], cmd_->cmd);                  // copies previous instruction into the command
-                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2; // repositioning cursoridx
-            }
-            break;
 
-        case 'B': // arrow down
-            if (sh->histpos == 50 || sh->hist[sh->histpos][0] == 0)
-            {
-                printf("\a");
-                fflush(stdout);
+            case 'B':  // arrow down
+                if (sh->histpos == 50 || sh->hist[sh->histpos][0] == 0)
+                {
+                    printf("\a");
+                    fflush(stdout);
+                    break;
+                } /* checks if newest command has been reached*/
+                strcopy(cmd_->cmd, sh->hist[sh->histpos]);  // saves current input in history at histpos
+                sh->histpos++;
+                strcopy(sh->hist[sh->histpos], cmd_->cmd);                   // copies previous instruction into the command
+                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  // repositioning cursoridx
                 break;
-            } /* checks if newest command has been reached*/
-            strcopy(cmd_->cmd, sh->hist[sh->histpos]); // saves current input in history at histpos
-            sh->histpos++;
-            strcopy(sh->hist[sh->histpos], cmd_->cmd);                  // copies previous instruction into the command
-            cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2; // repositioning cursoridx
-            break;
-        case 'C':
-            // checks if the curosr has met the rightmost edge of the command then increments cursor if not
-            if (cmd_->cursoridx < strLen(cmd_->cmd) + strLen(sh->wdir) + 2)
-            {
-                cmd_->cursoridx++;
-            }
-            else
-            {
-                printf("\a");
-                fflush(stdout);
+            case 'C':
+                // checks if the curosr has met the rightmost edge of the command then increments cursor if not
+                if (cmd_->cursoridx < strLen(cmd_->cmd) + strLen(sh->wdir) + 2)
+                {
+                    cmd_->cursoridx++;
+                }
+                else
+                {
+                    printf("\a");
+                    fflush(stdout);
+                    break;
+                }
                 break;
-            }
-            break;
-        case 'D':
-            // checks if the curosr has met the leftmost edge of the command then decrements cursor if not
-            if (cmd_->cursoridx > strLen(sh->wdir) + 2)
-            {
-                cmd_->cursoridx--;
-            }
-            else
-            {
-                printf("\a");
-                fflush(stdout);
+            case 'D':
+                // checks if the curosr has met the leftmost edge of the command then decrements cursor if not
+                if (cmd_->cursoridx > strLen(sh->wdir) + 2)
+                {
+                    cmd_->cursoridx--;
+                }
+                else
+                {
+                    printf("\a");
+                    fflush(stdout);
+                    break;
+                }
                 break;
-            }
-            break;
-        default: // other escape sequences starting with \033[ are ignored for now
-            break;
+            default:  // other escape sequences starting with \033[ are ignored for now
+                break;
         }
     }
     return 0;
@@ -146,152 +148,155 @@ void reposCurs(int cursoridx)
 /// @param Prompt giving prompt by calling function, i.e. cwd
 /// @param cmd string which will be interpreted as a command
 /// @return returns length of read input, -1 if an error occured
-int getInput(shell *sh, rawInput *cmd_)
+int getInput(shell* sh, rawInput* cmd_)
 {
     tabComp tab;
-    int len = 0;                    // variable checks how long the currently typed cmd is
-    int anc = strLen(sh->wdir) + 2; // varible to memorize the beggining of the user editable part of the cmd line
+    // at this point only these 2 fields are relevant to initialize, remaining fields get initialized when needed
+    tab.tabs = 0;
+    tab.matches = NULL;
+    int len = 0;                     // variable checks how long the currently typed cmd is
+    int anc = strLen(sh->wdir) + 2;  // varible to memorize the beggining of the user editable part of the cmd line
     char c = '\0';
-    cmd_->cursoridx = anc; // positions cursor at the first user eligable position
+    cmd_->cursoridx = anc;            // positions cursor at the first user eligable position
+    tcsetattr(0, TCSANOW, &sh->raw);  // enters raw mode
 
-    initTab(&tab);
-    tcsetattr(0, TCSANOW, &sh->raw); // enters raw mode
-
-    printf("%s: ", sh->wdir); // display prompt
+    printf("%s: ", sh->wdir);  // display prompt
     fflush(stdout);
 
     while (1)
     {
-
         int rd = read(0, &c, 1);
-        if (rd < 0) // checks failed read
+        if (rd < 0)  // checks failed read
         {
             perror("read");
-            tcsetattr(0, TCSANOW, &sh->canon); // return to canon mode
+            tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
             return -1;
         }
-        else if (rd == 0) // checks end of file
+        else if (rd == 0)  // checks end of file
         {
-            tcsetattr(0, TCSANOW, &sh->canon); // return to canon mode
+            tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
             return -1;
         }
         switch (c)
         {
-        case '\t': // Tabulator to autocomplete the directory if possible
-            if (tab.tabs == 0)
-            {
-                initTab(&tab);
-            }
-            tab.tabs++;
-            tabComplete(&tab, sh->builtins, cmd_->cmd, sh->wdir);
+            case '\t':  // Tabulator to autocomplete the directory if possible
+                if (tab.tabs == 0)
+                {
+                    initTab(&tab);
+                }
+                tab.tabs++;
+                int cntrl = tabComplete(&tab, sh->builtins, sh->binamt, cmd_->cmd, sh->wdir);
+                if (cntrl < 0)
+                {
+                    continue;
+                }
+                // refreshes screen
+                printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
+                fflush(stdout);
 
-            // refreshes screen
-            printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
-            fflush(stdout);
+                len = strLen(cmd_->cmd);      // readjusts str len
+                cmd_->cursoridx = len + anc;  // readjusts cursor
+                break;
 
-            len = strLen(cmd_->cmd);     // readjusts str len
-            cmd_->cursoridx = len + anc; // readjusts cursor
-            break;
+            case '\n':  // user pressed enter to send their instruction
+                if (cmd_->cmd[0] == '\0')
+                {
+                    printf("\a");
+                    fflush(stdout);
+                    continue;
+                }
+                // checks for history buffer overflows
+                if (sh->histpos < 50)
+                {
+                    strcopy(cmd_->cmd, sh->hist[sh->histpos]);
+                    sh->histpos++;
+                }
+                cleanupTab(&tab);  // avoid memory leaks
+                printf("\r\n");
+                fflush(stdout);
+                tcsetattr(0, TCSANOW, &sh->canon);  // exits raw mode
 
-        case '\n': // user pressed enter to send their instruction
-            if (cmd_->cmd[0] == '\0')
-            {
-                continue;
-            }
-            // checks for history buffer overflows
-            if (sh->histpos < 50)
-            {
-                strcopy(cmd_->cmd, sh->hist[sh->histpos]);
-                sh->histpos++;
-            }
-
-            tab.tabs = 0; // resets Tab counter
-            printf("\r\n");
-            fflush(stdout);
-            tcsetattr(0, TCSANOW, &sh->canon); // exits raw mode
-
-            /*
+                /*
             if ((addItem(&sh->history, sh->cmd)) == 0) // checks if adding item was successful
             {
                 sh->latest = sh->history.size - 1;     // resets latest
             }
             */
-            return strLen(cmd_->cmd);
-        case 127:
-            tab.tabs = 0; // resets Tab counter
-            if (cmd_->cursoridx > anc)
-            {
-                len--;
-                cmd_->cursoridx--;
-                delInStr(cmd_->cmd, cmd_->cursoridx - anc); // removes item in string
+                return strLen(cmd_->cmd);
+            case 127:
+                cleanupTab(&tab);  // avoid memory leaks
+                if (cmd_->cursoridx > anc)
+                {
+                    len--;
+                    cmd_->cursoridx--;
+                    delInStr(cmd_->cmd, cmd_->cursoridx - anc);  // removes item in string
 
+                    // refreshes the screen
+                    printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
+                    fflush(stdout);
+                    reposCurs(cmd_->cursoridx);
+                }
+                else
+                {
+                    printf("\a");
+                    fflush(stdout);
+                }
+
+                break;
+
+            case '\033':  // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
+                if (handleArrows(sh, cmd_) < 0)
+                {
+                    tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
+                    return -1;
+                }
                 // refreshes the screen
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
                 reposCurs(cmd_->cursoridx);
-            }
-            else
-            {
-                printf("\a");
-                fflush(stdout);
-            }
 
-            break;
+                len = strLen(cmd_->cmd);
+                cleanupTab(&tab);  // avoid memory leaks
 
-        case '\033': // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
-            if(handleArrows(sh, cmd_) < 0)
-            {
-                tcsetattr(0, TCSANOW, &sh->canon); // return to canon mode
-                return -1;
-            }
-            // refreshes the screen
-            printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
-            fflush(stdout);
-            reposCurs(cmd_->cursoridx);
-
-            len = strLen(cmd_->cmd);
-            tab.tabs = 0; // resets Tab counter
-
-            break;
-        default:
-            // checks if size of cmd string needs to be increased
-            if (len == cmd_->capac)
-            {
-                cmd_->capac *= 2; // doubles capacity
-                char *temp = realloc(cmd_->cmd, cmd_->capac);
-                if (temp == NULL)
+                break;
+            default:
+                // checks if size of cmd string needs to be increased
+                if (len == cmd_->capac)
                 {
-                    perror("malloc");
-                    tcsetattr(0, TCSANOW, &sh->canon); // return to canon mode
-                    return -1;
+                    cmd_->capac *= 2;  // doubles capacity
+                    char* temp = realloc(cmd_->cmd, cmd_->capac);
+                    if (temp == NULL)
+                    {
+                        perror("malloc");
+                        tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
+                        return -1;
+                    }
+
+                    cmd_->cmd = temp;
+                }
+                // cursor is in the string not at the end
+                if (cmd_->cursoridx - anc != len)
+                {
+                    insertInStr(cmd_->cmd, c, cmd_->cursoridx - anc, strLen(cmd_->cmd));
+                    cmd_->cursoridx++;
+                    len++;
+                    cmd_->cmd[len] = '\0';
+                }
+                else
+                {  // cursor is at the end of the string
+                    cmd_->cmd[cmd_->cursoridx - anc] = c;
+                    cmd_->cursoridx++;
+                    len++;
+                    cmd_->cmd[len] = '\0';
                 }
 
-                cmd_->cmd = temp;
-            }
-            // cursor is in the string not at the end
-            if (cmd_->cursoridx - anc != len)
-            {
-                insertInStr(cmd_->cmd, c, cmd_->cursoridx - anc, strLen(cmd_->cmd));
-                cmd_->cursoridx++;
-                len++;
-                cmd_->cmd[len] = '\0';
-            }
-            else
-            { // cursor is at the end of the string
-                cmd_->cmd[cmd_->cursoridx - anc] = c;
-                cmd_->cursoridx++;
-                len++;
-                cmd_->cmd[len] = '\0';
-            }
+                // refreshing screen
+                printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
+                fflush(stdout);
+                reposCurs(cmd_->cursoridx);
 
-            // refreshing screen
-            printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
-            fflush(stdout);
-            reposCurs(cmd_->cursoridx);
-
-            tab.tabs = 0; // resets Tab counter
-            break;
+                cleanupTab(&tab);  // avoid memory leaks
+                break;
         }
     }
 }
-
