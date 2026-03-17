@@ -6,7 +6,6 @@
 
 #include "shell.h"
 #include "str.h"
-#include "tools.h"
 
 /// @brief initializes a tabComp structure
 /// @param tab
@@ -67,13 +66,11 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
             // checks if capacity needs to be increased
             if (tab->matchcount == tab->capac - 1)  // -1 because of sentinel slot
             {
-                char** temp2 = doubleCapacity(tab->matches, &tab->capac);
-                if (temp2 == NULL)
+                int cntrl = increaseCapac(&tab->matches, &tab->capac, tab->capac); // doubles capacity
+                if (cntrl < 0)
                 {
-                    perror("realloc");
                     return -1;
                 }
-                tab->matches = temp2;
             }
             // allocates space for the found match including appended space and null terminator
             tab->matches[tab->matchcount] = malloc(temp + 2);
@@ -181,13 +178,11 @@ int completeArgs(tabComp* tab, char* token, char* path, int isExec)
             // checks if maximum capacity has been reached and doubles it if so
             if (*i == tab->capac - 1)
             {
-                char** temp2 = doubleCapacity(tab->matches, &tab->capac);
-                if (temp2 == NULL)
+                int cntrl = increaseCapac(&tab->matches, &tab->capac, tab->capac); // doubles capacity
+                if (cntrl < 0)
                 {
-                    perror("realloc");
                     return -1;
                 }
-                tab->matches = temp2;
             }
             // + 2 for appended / or space and \0
             int temp = strLen(compare->d_name);
@@ -387,4 +382,5 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
         }
     }
     handleCases(tab, &command[count + 1]);
+    return 0;
 }
