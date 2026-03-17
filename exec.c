@@ -87,15 +87,20 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
 /// @return 0 if success, -1 if error, 1 if exit is called
 int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int ID)
 {
-    // local copies of the standard datachannels to restore them after redirections
-    int out_fd = dup(STDOUT_FILENO);
-    int err_fd = dup(STDERR_FILENO);
-    int in_fd = dup(STDIN_FILENO);
+    // declerations for parent
+    int out_fd = 0;
+    int err_fd = 0;
+    int in_fd =  0;
 
     int cntrl = 0;
     // sets up redirections for parents process, redirects for pipes are handles by setUpPipe
     if (ID == PARENT_PROCCESS)
     {
+        // local copies of the standard datachannels to restore them after redirections
+        out_fd = dup(STDOUT_FILENO);
+        err_fd = dup(STDERR_FILENO);
+        in_fd  = dup(STDIN_FILENO);
+
         for (int i = 0; i < instructs->rdrctns; i++)
         {
             cntrl = handleRedirections(&instructs->redir[i]);
@@ -119,7 +124,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
         dup2(out_fd, STDOUT_FILENO);
         close(out_fd);
         dup2(err_fd, STDERR_FILENO);
-        close(out_fd);
+        close(err_fd);
         dup2(in_fd, STDIN_FILENO);
         close(in_fd);
         return 0;  // silent return to main in parent
@@ -146,7 +151,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
                 dup2(out_fd, STDOUT_FILENO);
                 close(out_fd);
                 dup2(err_fd, STDERR_FILENO);
-                close(out_fd);
+                close(err_fd);
                 dup2(in_fd, STDIN_FILENO);
                 close(in_fd);
                 return 0;
@@ -182,7 +187,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
     dup2(out_fd, STDOUT_FILENO);
     close(out_fd);
     dup2(err_fd, STDERR_FILENO);
-    close(out_fd);
+    close(err_fd);
     dup2(in_fd, STDIN_FILENO);
     close(in_fd);
     return 0;

@@ -43,7 +43,7 @@ void cd(char *dir)
 }
 
 /// @brief prints current working directory
-void pwd(char *)
+void pwd(char *flags)
 {
     char temp[2048];
     printf("%s\n", getcwd(temp, 2048));

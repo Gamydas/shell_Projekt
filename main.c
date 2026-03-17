@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     myShell.bins = builtins;
     
 
-    int ID = 0;                       // this is used to determine wether a process is a child or not
     CLEAR;
     HOME;
     while (1)
