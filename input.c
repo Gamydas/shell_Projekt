@@ -224,7 +224,7 @@ int getInput(shell* sh, rawInput* cmd_)
             */
                 return strLen(cmd_->cmd);
             case 127:
-                if (tab.tabs > 0) cleanupTab(&tab);  // avoid memory leaks
+                cleanupTab(&tab);  // avoid memory leaks
                 if (cmd_->cursoridx > anc)
                 {
                     len--;
@@ -256,7 +256,7 @@ int getInput(shell* sh, rawInput* cmd_)
                 reposCurs(cmd_->cursoridx);
 
                 len = strLen(cmd_->cmd);
-                if (tab.tabs > 0) cleanupTab(&tab);  // avoid memory leaks
+                cleanupTab(&tab);  // avoid memory leaks
 
                 break;
             default:
@@ -295,7 +295,7 @@ int getInput(shell* sh, rawInput* cmd_)
                 fflush(stdout);
                 reposCurs(cmd_->cursoridx);
 
-                if (tab.tabs > 0) cleanupTab(&tab);  // avoid memory leaks
+                cleanupTab(&tab);  // avoid memory leaks
                 break;
         }
     }
