@@ -8,7 +8,6 @@ void initShell(shell* sh)
     // integer intitializations
     sh->histpos = 0;
     sh->binamt = 4;
-
     
     // str and buffer initializations
     initStr(sh->wdir, 0, sizeof(sh->wdir));
@@ -19,10 +18,10 @@ void initShell(shell* sh)
     }
 
     // entering all currently existing builtins into the array
-    strcopy("cd", sh->builtins[0]);
-    strcopy("pwd", sh->builtins[1]);
-    strcopy("echo", sh->builtins[2]);
-    strcopy("type", sh->builtins[3]);
+    strcopy("exit", sh->builtins[0]);
+    strcopy("cd", sh->builtins[1]);
+    strcopy("type", sh->builtins[2]);
+    strcopy("pwd", sh->builtins[3]);
     
     // termios initialization
     tcgetattr(0, &sh->canon);
