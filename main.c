@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
         // loading the user command into cmd string
         control = getInput(&myShell, &userInput);
-        if (control == -1)
+        if (control < 0)
         {
             freeRaw(&userInput);
             cleanupInstructList(&instructions);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         
         // seperating the command String into the seperate instructions
         control = parseInput(&instructions, userInput.cmd);
-        if (control == -1)
+        if (control < 0)
         {
             freeRaw(&userInput);
             cleanupInstructList(&instructions);
