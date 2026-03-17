@@ -204,11 +204,14 @@ int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, i
 int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR type)
 {
     int cntrl = 0;
-    token[*idx] = text[*pos];
-    (*idx)++;
-    (*pos)++;
-    if (!text[*pos])
+    if (text[*pos])
     {
+        token[*idx] = text[*pos];
+        (*idx)++;
+        (*pos)++;
+        return 0;
+    }else if (!text[*pos]) // This got seperated so there is one total final call of this function 
+    {                      // in parser and not a bunch of different if(!text[pos]) cases
         token[*idx] = '\0';  // terminates final token
         // this checks if the last token is a redirect target
         if (type == END_NEXT)
@@ -340,21 +343,35 @@ int parseInput(InstructList *list, char *text)
             break;
 
         case '"':  // double quote
+            // double quote loses its meaning in single quotes
+            if (mode == SINGLE_QUOTES)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
+                }
+                break;
+            }
             switchModes(&mode, text[pos]);
             pos++;  // this skips the quotes so they dont land in the token
-            if (!text[pos])
-            {
-                token[idx] = '\0';
-            }
             break;
 
         case 39:  // single quote
+            // single quote loses its meaning in double quotes
+            if (mode == DOUBLE_QUOTES) 
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
+                }
+                break;
+            }
             switchModes(&mode, text[pos]);
             pos++;  // this skips the quotes so they dont land in the token
-            if (!text[pos])
-            {
-                token[idx] = '\0';
-            }
             break;
 
         case '>':
@@ -411,26 +428,34 @@ int parseInput(InstructList *list, char *text)
                 cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;                     // error occured, message will be given by exited funct
             }
-            // adds the final instruction to list
-            if (!text[pos])
-            {
-                cntrl = handleConnectors(&instructs, list, END);
-                if (cntrl < 0)
-                {
-                    /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
-                       i.e every currently existing malloced instruct is part of list, which will be freed as a
-                     whole by main*/
-                    return -1;  // error occured, message will be given by exited funct
-                }
-            }
+            
             break;
         }
     }
+
+    // final token when text[pos] reaches \0
+    cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+    if (cntrl < 0)
+    {
+        cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+        return -1;                     // error occured, message will be given by exited funct
+    }
+    cntrl = handleConnectors(&instructs, list, END);
+    if (cntrl < 0)
+    {
+        /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
+                       i.e every currently existing malloced instruct is part of list, which will be freed as a
+                     whole by main*/
+        return -1;  // error occured, message will be given by exited funct
+    }
+
     // if nothing was added to instructs we need to clean up locally
     if (list->size == 1)
     {
         cleanupInstructs(&instructs);
+        return 0;
     }
+
     return 0;
 }
 
