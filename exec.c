@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "parser.h"
 #include "pipelining.h"
@@ -39,7 +39,7 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
             {
                 return -1;  // caller handles cleanup
             }
-            if (ID != PARENT_PROCCESS) // to avoid executing commands twice
+            if (ID != PARENT_PROCCESS)  // to avoid executing commands twice
             {
                 // executes commands in the children at their approricate position i.E instructs[begin + ID]
                 cntrl = executeCommand(&list->instructs[begin + ID], builtins, binamt, ID);
@@ -64,7 +64,8 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
             if (cntrl < 0)
             {
                 return -1;  // caller handles cleanup
-            } if (cntrl == 1) // indicates exit has been called
+            }
+            if (cntrl == 1)  // indicates exit has been called
             {
                 return 1;
             }
@@ -89,14 +90,39 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
     // local copies of the standard datachannels to restore them after redirections
     int out_fd = dup(STDOUT_FILENO);
     int err_fd = dup(STDERR_FILENO);
-    int in_fd =  dup(STDIN_FILENO);
+    int in_fd = dup(STDIN_FILENO);
+
+    int cntrl = 0;
     // sets up redirections for parents process, redirects for pipes are handles by setUpPipe
     if (ID == PARENT_PROCCESS)
     {
         for (int i = 0; i < instructs->rdrctns; i++)
         {
-            handleRedirections(&instructs->redir[i]);
+            cntrl = handleRedirections(&instructs->redir[i]);
+            if (cntrl < 0)
+            {
+                return -1;
+            }
         }
+    }
+    /* catches if an instruct has empty arguments, this can happen if e.g only a redirection
+       was part of an instruction i.e > out.txt or < in.txt | grep .c | ; this is due to
+       redirections and other operators not being tokenized*/
+    if (instructs->args[0] == NULL)
+    {
+        // in casethis happens in a pipe or other child processes
+        if (ID != PARENT_PROCCESS)
+        {
+            exit(0);
+        }
+        // restoring original FDs
+        dup2(out_fd, STDOUT_FILENO);
+        close(out_fd);
+        dup2(err_fd, STDERR_FILENO);
+        close(out_fd);
+        dup2(in_fd, STDIN_FILENO);
+        close(in_fd);
+        return 0;  // silent return to main in parent
     }
     // checks for built ins
     for (int i = 0; i < binamt; i++)
@@ -104,9 +130,9 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
         if (strcomp(builtins[i].name, instructs->args[0]) == 0)
         {
             // only for the parent, i.e the actual shell process
-            if(strcomp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
+            if (strcomp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
             {
-                return 1; // indicates caller that exit has been called
+                return 1;  // indicates caller that exit has been called
             }
             builtins[i].bin(instructs->args[1]);
             // terminates process if called by child
@@ -116,6 +142,13 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
             }
             else
             {
+                // restoring original fds after a builtin
+                dup2(out_fd, STDOUT_FILENO);
+                close(out_fd);
+                dup2(err_fd, STDERR_FILENO);
+                close(out_fd);
+                dup2(in_fd, STDIN_FILENO);
+                close(in_fd);
                 return 0;
             }
         }
@@ -127,7 +160,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
         perror("execvp");
         exit(1);
     }
-    else if (ID == PARENT_PROCCESS) // parent called this function
+    else if (ID == PARENT_PROCCESS)  // parent called this function
     {
         int rc = fork();
         if (rc < 0)
@@ -150,7 +183,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
     close(out_fd);
     dup2(err_fd, STDERR_FILENO);
     close(out_fd);
-    dup2(in_fd,  STDIN_FILENO);
+    dup2(in_fd, STDIN_FILENO);
     close(in_fd);
     return 0;
 }
