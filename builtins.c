@@ -7,33 +7,36 @@
 
 /// @brief kills calling process
 /// @param text ignores everything typed after exit
-void shell_exit(char* text)
+void shell_exit(char *text)
 {
     exit(0);
 }
 /// @brief function to change the current working directory
 /// @param dir directory to be changed to
-void cd(char* dir)
+void cd(char *dir)
 {
-    if (dir != NULL)
+    if (dir == NULL)
     {
-        if (strcomp(dir, "~") == 0)
+        dir = getenv("HOME");
+        if (dir == NULL)
         {
-            dir = getenv("HOME");
-            if (dir == NULL)
-            {
-                fprintf(stderr, "failed to fetch path to home directory\n");
+            fprintf(stderr, "failed to fetch path to home directory\n");
 
-                return;
-            }
-        }
-        // if chdir failed i.e dir doesnt exist
-        if (chdir(dir) == -1)
-        {
-            fprintf(stderr, "Directory does not exit.\n");
+            return;
         }
     }
-    else
+    if (strcomp(dir, "~") == 0)
+    {
+        dir = getenv("HOME");
+        if (dir == NULL)
+        {
+            fprintf(stderr, "failed to fetch path to home directory\n");
+
+            return;
+        }
+    }
+    // if chdir failed i.e dir doesnt exist
+    if (chdir(dir) == -1)
     {
         fprintf(stderr, "Directory does not exit.\n");
     }
@@ -48,7 +51,7 @@ void pwd(char *)
 
 /// @brief prints out the given string to the terminal
 /// @param text
-void echo(char* text)
+void echo(char *text)
 {
     if (text != NULL)
     {
@@ -62,7 +65,7 @@ void echo(char* text)
 
 /// @brief tells user what type a command is
 /// @param text
-void type(char* text)
+void type(char *text)
 {
     if (text != NULL)
     {
@@ -74,7 +77,8 @@ void type(char* text)
         {
             fprintf(stderr, "%s: is not a buildtin\n", text);  // a check for UNIX-Tools like ls & co. will be added later
         }
-    } else 
+    }
+    else
     {
         fprintf(stderr, " : not found\n");
     }
