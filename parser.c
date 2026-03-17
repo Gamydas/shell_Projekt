@@ -1,3 +1,5 @@
+#include "parser.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -5,7 +7,6 @@
 #include <unistd.h>
 
 #include "err.h"
-#include "parser.h"
 #include "redirect.h"
 #include "str.h"
 
@@ -85,12 +86,12 @@ int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect)
     list->instructs[list->size - 2].capac = instructs->capac;
     list->instructs[list->size - 2].parseamt = instructs->parseamt;
     list->instructs[list->size - 2].rdrctns = instructs->rdrctns;
-    
+
     for (int i = 0; i < instructs->rdrctns; i++)
     {
         list->instructs[list->size - 2].redir[i] = instructs->redir[i];
     }
-    
+
     list->connects[list->size - 2] = connect;
     list->instructs[list->size - 1].args = NULL;
     list->connects[list->size - 1] = NO_CONNECTOR;
@@ -150,26 +151,26 @@ int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, i
     // checks if redirection targets need to be set
     if (*type != NO_REDIR && *type != END_NEXT)
     {
-        instruct->redir[instruct->rdrctns].direction = *type; // saves redirect type
-        *type = END_NEXT;                                     // indicates that next token is target
-        (*pos)++;
-        *idx = 0;  // to reposition token cursor
-        initStr(token, 0, strLen(token)); // clears token to avoid wrong reads
-        return 0;  // need to return so the redir operator doesnt get tokenized
+        instruct->redir[instruct->rdrctns].direction = *type;  // saves redirect type
+        *type = END_NEXT;                                      // indicates that next token is target
+        // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
+        // idx is already 0 so no need to reset it here
+        initStr(token, 0, strLen(token));  // clears token to avoid wrong reads
+        return 0;                          // need to return so the redir operator doesnt get tokenized
     }
     else if (*type == END_NEXT)
     {
-        *type = instruct->redir[instruct->rdrctns].direction; // fetches current redirection type
+        *type = instruct->redir[instruct->rdrctns].direction;  // fetches current redirection type
         cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, type);
         if (cntrl < 0)
         {
             return -1;  // error occured, message handled by exited funct, cleanup handled by caller
         }
         instruct->rdrctns++;
-        (*pos)++;          // increases pos so target token does not get tokenized
-        *idx = 0;          // resets token index
-        initStr(token, 0, strLen(token)); // clears token to avoid wrong reads
-        *type = NO_REDIR;  // resets redirection type for next redir
+        // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
+        // idx is already 0 so no need to reset it here
+        initStr(token, 0, strLen(token));  // clears token to avoid wrong reads
+        *type = NO_REDIR;                  // resets redirection type for next redir
         return 0;
     }
 
@@ -212,7 +213,7 @@ int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int
         // this checks if the last token is a redirect target
         if (type == END_NEXT)
         {
-            type = instruct->redir[instruct->rdrctns].direction; // fetches the current redirection type
+            type = instruct->redir[instruct->rdrctns].direction;  // fetches the current redirection type
             cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, &type);
             if (cntrl < 0)
             {
@@ -272,14 +273,16 @@ int parseInput(InstructList *list, char *text)
                 cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    return -1;  // error occured, message will be given by exited funct
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
             cntrl = handleSeperator(&instructs, token, text, &idx, &pos, &dir);
             if (cntrl < 0)
             {
-                return -1;  // error occured, message will be given by exited funct
+                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                return -1;                     // error occured, message will be given by exited funct
             }
             break;
         case '|':  // pipe
@@ -288,15 +291,25 @@ int parseInput(InstructList *list, char *text)
                 cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    return -1;  // error occured, message will be given by exited funct
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
+            }
+            // i.e this is the first token in an instruction, which is illegal
+            if (instructs.parseamt == 0)
+            {
+                error = SYNTAX_ERROR;
+                printError(error, &text[pos]);
+                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                return -1;
             }
             cntrl = handleConnectors(&instructs, list, PIPE);
             if (cntrl < 0)
             {
                 // error message thrown by exited funtion
-                return -1;  // caller responsible for cleanup
+                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                return -1;                     // caller responsible for cleanup
             }
             idx = 0;  // a connector is the end of a token
             pos++;    // move position
@@ -308,13 +321,17 @@ int parseInput(InstructList *list, char *text)
                 cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    return -1;  // error occured, message will be given by exited funct
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
             cntrl = handleConnectors(&instructs, list, SEQ);
             if (cntrl < 0)
             {
+                /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
+                   i.e every currently existing malloced instruct is part of list, which will be freed as a
+                   whole by main*/
                 // error message thrown by exited funtion
                 return -1;  // caller responsible for cleanup
             }
@@ -346,7 +363,8 @@ int parseInput(InstructList *list, char *text)
                 cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    return -1;  // error occured, message will be given by exited funct
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -355,11 +373,11 @@ int parseInput(InstructList *list, char *text)
                 token[idx] = text[pos];
                 pos++;
                 idx++;
-                
             }
             else
             {
-                return -1;  // syntax error, handled by switchDirect
+                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                return -1;                     // syntax error, handled by switchDirect
             }
             break;
 
@@ -369,7 +387,8 @@ int parseInput(InstructList *list, char *text)
                 cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    return -1;  // error occured, message will be given by exited funct
+                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -380,6 +399,7 @@ int parseInput(InstructList *list, char *text)
                 return -1;
             }
             dir = REDIR_IN;
+            token[idx] = text[pos];  // to avoid segmentation faults, this will not end up in args
             pos++;
             idx++;
             break;
@@ -388,7 +408,8 @@ int parseInput(InstructList *list, char *text)
             cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
             if (cntrl < 0)
             {
-                return -1;  // error occured, message will be given by exited funct
+                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                return -1;                     // error occured, message will be given by exited funct
             }
             // adds the final instruction to list
             if (!text[pos])
@@ -396,6 +417,9 @@ int parseInput(InstructList *list, char *text)
                 cntrl = handleConnectors(&instructs, list, END);
                 if (cntrl < 0)
                 {
+                    /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
+                       i.e every currently existing malloced instruct is part of list, which will be freed as a
+                     whole by main*/
                     return -1;  // error occured, message will be given by exited funct
                 }
             }
