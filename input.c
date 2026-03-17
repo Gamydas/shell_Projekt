@@ -151,8 +151,9 @@ void reposCurs(int cursoridx)
 int getInput(shell* sh, rawInput* cmd_)
 {
     tabComp tab;
-    // at this point only this field is relevant to initialize, remaining fields get initialized when needed
+    // at this point only these 2 fields are relevant to initialize, remaining fields get initialized when needed
     tab.tabs = 0;
+    tab.matches = NULL;
     int len = 0;                     // variable checks how long the currently typed cmd is
     int anc = strLen(sh->wdir) + 2;  // varible to memorize the beggining of the user editable part of the cmd line
     char c = '\0';
@@ -200,6 +201,8 @@ int getInput(shell* sh, rawInput* cmd_)
             case '\n':  // user pressed enter to send their instruction
                 if (cmd_->cmd[0] == '\0')
                 {
+                    printf("\a");
+                    fflush(stdout);
                     continue;
                 }
                 // checks for history buffer overflows
@@ -208,7 +211,7 @@ int getInput(shell* sh, rawInput* cmd_)
                     strcopy(cmd_->cmd, sh->hist[sh->histpos]);
                     sh->histpos++;
                 }
-                if (tab.tabs > 0) cleanupTab(&tab);  // avoid memory leaks
+                cleanupTab(&tab);  // avoid memory leaks
                 printf("\r\n");
                 fflush(stdout);
                 tcsetattr(0, TCSANOW, &sh->canon);  // exits raw mode
