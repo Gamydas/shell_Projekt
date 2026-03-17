@@ -1,14 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include "parser.h"
-#include "err.h"
-#include "str.h"
-#include "redirect.h"
-#include "pipelining.h"
 
+#include "err.h"
+#include "parser.h"
+#include "redirect.h"
+#include "str.h"
 
 /// @brief This function sets the current working mode of the parser.
 ///        Single and Double respond to the respective character, every
@@ -38,7 +37,7 @@ void switchModes(MODUS *mode, char c)
         }
         break;
 
-    case 39: // single quote '
+    case 39:  // single quote '
         // switches to S_Q if current mode is normal
         if (*mode == NORMAL)
         {
@@ -59,300 +58,362 @@ void switchModes(MODUS *mode, char c)
     }
 }
 
-
-
-/// @brief this functions purpose is to parse a given string
-///        according to a very specific set of rules, rules will follow
-/// @param text the raw input string handed given by input module
-/// @return returns 0 if succesful, -1 if not
-int parseInput(command *cmd_, char *text)
+/// @brief adds a new item to the list of instructions and ensures connects and instructs dont drift apart in size
+/// @param list
+/// @return
+int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect)
 {
-    ERR error = NO_ERROR;
-    MODUS mode = NORMAL;
-    REDIR type = NO_REDIR;
-    // segment in this context means e.g one segment of a pipe, or from | to ;
-    int segment = 0;                 // will be used as sentinel to remember where a segment started
-    int *parseamt = &cmd_->parseamt; // amount of parsed tokens; the first dimension of a char[][]
-    int idx = 0;                     // length of currently parsed token; second dimension of char[][]
-    int rdrct = 0;                   // if this is 0 no redirection was called, 1 if one was called
-    char token[PATH_MAX];            // a buffer to temporarily hold the token that is to be parsed
-    char lastOp = 0;                 // stores last operator for easy checks on last token
-    while (*text)
+    list->size++;  // first increase size
+    Instructions *temp = realloc(list->instructs, list->size * sizeof(Instructions));
+    if (temp == NULL)
     {
-        switch (*text)
-        {
-        case '\t':
-        /* THIS IS AN INTENDED FALLTHROUGH, IT AVOIDS HAVING 2 NEARLY IDENTICAL
-           CODE SEGMENTS */
-        case 32: // space
-            // pipecalls are not to be tokenized
-            if (idx == 1 && *(text - 1) == '|')
-            {
-                text++;
-                idx = 0;
-                break;
-            }
-
-            // redirection has been called
-            if (type != NO_REDIR)
-            {
-                rdrct++;
-            }
-            // this avoids token creation for redirection operator
-            if (rdrct == 1)
-            {
-                text++;
-                idx = 0;
-                break;
-            }
-            // filters spaces at beginning of command
-            if (*parseamt == 0 && idx == 0 && mode == NORMAL)
-            {
-                while (*text == 32 || *text == '\t')
-                    text++;
-                break;
-            }
-            // new token
-            if (mode == NORMAL)
-            {
-                // this checks for consequtive seperators to avoid false tokens
-                if (*(text - 1) == 32 || *(text - 1) == '\t')
-                {
-                    text++;
-                    break;
-                }
-                token[idx] = '\0'; // terminates token
-                /* if rdrct is 2 then 2 seperators have been called since the
-                   the last redirection operator, meaning this is the target
-                   token*/
-                if (rdrct == 2)
-                {
-                    cmd_->redir[cmd_->rdrctns].direction = type;
-                    cmd_->redir[cmd_->rdrctns].target = malloc(strLen(token) + 1); // +1 for \0
-                    if (cmd_->redir[cmd_->rdrctns].target == NULL)
-                    {
-                        perror("malloc");
-                        return -1;
-                    }
-                    strcopy(token, cmd_->redir[cmd_->rdrctns].target);
-                    /* checks if redirection is succesful and returns an error if not
-                       errormessage gets sent by functions*/
-                    if (redirection(&cmd_->redir[cmd_->rdrctns]) == 0)
-                    {
-                        cmd_->rdrctns++;
-                    }
-                    else
-                    {
-                        return -1;
-                    }
-                    rdrct = 0;
-                    type = NO_REDIR;
-                    // to avoid this token appearing as an argument in parsed
-                    text++;
-                    idx = 0;
-                    break;
-                }
-
-                // this checks if the max size of the array was reached and doubles it if so
-                if (*parseamt > 0 && *parseamt % 30 == 0)
-                {
-                    char **temp = realloc(cmd_->parsed, ((*parseamt * 2) + 1) * sizeof(char *)); // +1 for sentinel
-                    if (temp == NULL)
-                    {
-                        perror("malloc");
-                        return -1;
-                    }
-                    cmd_->parsed = temp;
-                }
-
-                // transfers the token into the parsed arr of the cmd struct
-                cmd_->parsed[*parseamt] = malloc(strLen(token) + 1); // +1 for \0
-                if (cmd_->parsed[*parseamt] == NULL)
-                {
-                    perror("malloc");
-                    return -1;
-                }
-                strcopy(token, cmd_->parsed[*parseamt]);
-
-                (*parseamt)++; // opens new token
-                text++;
-                idx = 0; // resets length for new token
-                break;
-            }
-            // space gets read as a normal sign, so it goes into the default case
-            if (mode == SINGLE_QUOTES || mode == DOUBLE_QUOTES)
-            {
-                goto append;
-            }
-            break;
-        case '"':
-            switchModes(&mode, *text);
-            text++; // this skips the quotes so they dont land in the token
-            if(!*text)
-            {
-                token[idx] = '\0';
-            }
-            break;
-        case 39: // '
-            switchModes(&mode, *text);
-            text++; // this skips the quotes so they dont land in the token
-            if(!*text)
-            {
-                token[idx] = '\0';
-            }
-            break;
-        case '>':
-            if (mode == SINGLE_QUOTES || mode == DOUBLE_QUOTES)
-            {
-                goto append;
-            }
-            if (switchDirect(&type, token, idx) == 0)
-            {
-                text++;
-                idx++;
-            }
-            else
-            {
-                return -1; // syntax error, handled by switchDirect
-            }
-            break;
-
-        case '<':
-            if (mode == SINGLE_QUOTES || mode == DOUBLE_QUOTES)
-            {
-                goto append;
-            }
-            if (idx > 0) // < can only stand alone
-            {
-                error = SYNTAX_ERROR;
-                printError(error, text);
-                return -1;
-            }
-            type = REDIR_IN;
-            text++;
-            idx++;
-            break;
-
-        case '|':
-            if (mode == SINGLE_QUOTES || mode == DOUBLE_QUOTES)
-            {
-                goto append;
-            }
-            // pipecall has no arguments or is part of an illegal token e.g ||
-            if (*parseamt == 0 || idx > 0)
-            {
-                error = SYNTAX_ERROR;
-                printError(error, text);
-                return -1;
-            }
-            
-            if (fillPipes(cmd_, *parseamt - segment) == -1)
-            {
-                return -1;
-            } 
-            segment = *parseamt;
-            text++;
-            idx++;
-            lastOp = '|';
-            break;
-            /*
-
-            case '*':
-
-            case '?':
-
-            case '~':
-            */
-
-        default: // default case simply appends the current character to the current token
-        append:  // C doesnt allow goto default; so this is the fallthrough point for most functions
-            token[idx] = *text;
-            idx++;
-            text++;
-            if (!*text)
-            {
-                token[idx] = '\0'; // terminates final token
-                // this checks if the last token is a redirect target
-                if (rdrct == 1)
-                {
-                    cmd_->redir[cmd_->rdrctns].direction = type;
-                    cmd_->redir[cmd_->rdrctns].target = malloc(strLen(token) + 1); // +1 for \0
-                    if (cmd_->redir[cmd_->rdrctns].target == NULL)
-                    {
-                        perror("malloc");
-                        return -1;
-                    }
-                    strcopy(token, cmd_->redir[cmd_->rdrctns].target);
-                    /* checks if redirection is succesful and returns an error if not
-                       errormessage gets sent by functions*/
-                    if (redirection(&cmd_->redir[cmd_->rdrctns]) == 0)
-                    {
-                        cmd_->rdrctns++;
-                    }
-                    else
-                    {
-                        return -1;
-                    }
-                    // array termination for exec and co.
-                    cmd_->parsed[*parseamt] = NULL;
-                    return 0;
-                }
-
-                // this checks if the max size of the array was reached and doubles it if so
-                if (*parseamt > 0 && *parseamt % 30 == 0)
-                {
-                    char **temp = realloc(cmd_->parsed, ((*parseamt * 2) + 1) * sizeof(char *)); // plus 1 for sentinel
-                    if (temp == NULL)
-                    {
-                        perror("malloc");
-                        return -1;
-                    }
-                    cmd_->parsed = temp;
-                }
-                cmd_->parsed[*parseamt] = malloc(strLen(token) + 1); // +1 for \0
-                if (cmd_->parsed[*parseamt] == NULL)
-                {
-                    perror("malloc");
-                    return -1;
-                }
-                strcopy(token, cmd_->parsed[*parseamt]);
-            }
-            break;
-        }
+        perror("malloc");
+        return -1;
     }
-
-    (*parseamt)++;
-    cmd_->parsed[*parseamt] = NULL; // array termination
-    // checks if the last op was a pipecall and creates a pipe if so
-    if(lastOp == '|')
+    list->instructs = temp;
+    CONNECTOR *temp2 = realloc(list->connects, list->size * sizeof(CONNECTOR));
+    if (temp2 == NULL)
     {
-        fillPipes(cmd_, *parseamt - segment);
+        // dont free temp here, the user of InstructList is responsible for cleaning up
+        perror("malloc");
+        return -1;
+    }
+    list->connects = temp2;
+
+    // always adds the new items to the second to last slot, last slot always reserved for Sentinel
+    list->instructs[list->size - 2].args = instructs->args;
+    list->instructs[list->size - 2].capac = instructs->capac;
+    list->instructs[list->size - 2].parseamt = instructs->parseamt;
+    list->instructs[list->size - 2].rdrctns = instructs->rdrctns;
+    
+    for (int i = 0; i < instructs->rdrctns; i++)
+    {
+        list->instructs[list->size - 2].redir[i] = instructs->redir[i];
     }
     
+    list->connects[list->size - 2] = connect;
+    list->instructs[list->size - 1].args = NULL;
+    list->connects[list->size - 1] = NO_CONNECTOR;
+    return 0;
+}
 
-    // assigns every pipe its purpose
-    for (int i = 0; i < cmd_->pipecalls; i++)
+int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR connect)
+{
+    instructs->parseamt++;                        // parseamt can never reach capac before this, so no realloc check needed, just place sentinel
+    instructs->args[instructs->parseamt] = NULL;  // NULL sentinel
+    int cntrl = addSegment(list, instructs, connect);
+    if (cntrl < 0)
     {
-        if (i == 0) // first pipe
+        // error message thrown by exited funtion
+        return -1;  // caller responsible for cleanup
+    }
+    if (connect != END)
+    {
+        cntrl = initInstructs(instructs);  // resets instruction object and creates new memory adresses, i.e a totally new item
+        if (cntrl < 0)
         {
-            cmd_->pipes[i].status = IN_PIPE;
-        } else if (i == cmd_->pipecalls - 1) // last pipe
-        {
-            cmd_->pipes[i].status = OUT_PIPE;
-        } else // inbetween
-        {
-            cmd_->pipes[i].status = DOUBLE_PIPE;
+            // error message thrown by exited funtion
+            return -1;  // caller responsible fo
         }
     }
-    
 
     return 0;
 }
 
-/// @brief
+/// @brief filters every seperator at the beginning of the given token, then checks if
+///        every nessecary case
+/// @param instruct
+/// @param token
+/// @param text
+/// @param idx position in token
+/// @param pos position in text
+/// @param type
+/// @return 0 if success, -1 if error
+int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type)
+{
+    int cntrl = 0;
+
+    // clears out all sequential seperators to avoid false tokenization
+    while (text[*pos] == 32 || text[*pos] == '\t')
+    {
+        (*pos)++;
+    }
+    // checks if the found seperator was at the beginning of a token
+    if (*idx == 0 && instruct->parseamt == 0)
+    {
+        return 0;
+    }
+    // finishing token and resetting idx
+    token[*idx] = '\0';
+    *idx = 0;
+
+    // checks if redirection targets need to be set
+    if (*type != NO_REDIR && *type != END_NEXT)
+    {
+        instruct->redir[instruct->rdrctns].direction = *type; // saves redirect type
+        *type = END_NEXT;                                     // indicates that next token is target
+        (*pos)++;
+        *idx = 0;  // to reposition token cursor
+        initStr(token, 0, strLen(token)); // clears token to avoid wrong reads
+        return 0;  // need to return so the redir operator doesnt get tokenized
+    }
+    else if (*type == END_NEXT)
+    {
+        *type = instruct->redir[instruct->rdrctns].direction; // fetches current redirection type
+        cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, type);
+        if (cntrl < 0)
+        {
+            return -1;  // error occured, message handled by exited funct, cleanup handled by caller
+        }
+        instruct->rdrctns++;
+        (*pos)++;          // increases pos so target token does not get tokenized
+        *idx = 0;          // resets token index
+        initStr(token, 0, strLen(token)); // clears token to avoid wrong reads
+        *type = NO_REDIR;  // resets redirection type for next redir
+        return 0;
+    }
+
+    // checks if new memory has to be allocated
+    if (instruct->parseamt == instruct->capac - 1)  // always leave one space for sentinel
+    {
+        cntrl = increaseCapac(&instruct->args, &instruct->capac, instruct->capac);  // doubles capac
+        if (cntrl < 0)
+        {
+            return -1;
+        }
+    }
+    // adds the finished token to the arguments array
+    cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt]);
+    if (cntrl < 0)
+    {
+        return -1;
+    }
+    instruct->parseamt++;
+    // do not increment pos here, that is already done in the first while
+    return 0;
+}
+
+/// @brief adds text[pos] to token[idx] then increments both, if text[pos] is \0 finishes the last token
+/// @param cmd_
+/// @param token token to which the given character is to be appended
+/// @param text pointer to a string, neessecary because it is to be changed outside of this functions scope
+/// @param idx  current idex of token
+/// @param pos position in text
+/// @return
+int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR type)
+{
+    int cntrl = 0;
+    token[*idx] = text[*pos];
+    (*idx)++;
+    (*pos)++;
+    if (!text[*pos])
+    {
+        token[*idx] = '\0';  // terminates final token
+        // this checks if the last token is a redirect target
+        if (type == END_NEXT)
+        {
+            type = instruct->redir[instruct->rdrctns].direction; // fetches the current redirection type
+            cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, &type);
+            if (cntrl < 0)
+            {
+                return -1;  // same error handling as everywhere else in this module
+            }
+            instruct->rdrctns++;
+            instruct->args[instruct->parseamt] = NULL;  // redir target is not to be tokenized!
+            return 0;
+        }
+
+        // checks if more memory needs to be allocated
+        if (instruct->parseamt == instruct->capac - 1)
+        {
+            cntrl = increaseCapac(&instruct->args, &instruct->capac, 1);  // only needs 1 more slot for the NULL sentinel
+            if (cntrl < 0)
+            {
+                return -1;  // same error handling as everywhere else in this module
+            }
+        }
+        // enters token into the parsed arrays
+        // transfers the token into the parsed arr of the cmd struct
+        cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt]);
+        if (cntrl < 0)
+        {
+            return -1;  // malloc error
+        }
+        instruct->parseamt++;
+        instruct->args[instruct->parseamt] = NULL;  // Sentinel
+    }
+    return 0;
+}
+
+/// @brief parses the given string according to certain rules, will be documented seperately
+/// @param list list item
+/// @param text raw Input, usually handed by input.c module
+/// @return 0 if success, -1 if error
+int parseInput(InstructList *list, char *text)
+{
+    ERR error = NO_ERROR;
+    MODUS mode = NORMAL;
+    REDIR dir = NO_REDIR;
+    int cntrl = 0;
+    int idx = 0;
+    int pos = 0;
+    char token[PATH_MAX];
+    Instructions instructs;
+    initInstructs(&instructs);
+    while (text[pos])
+    {
+        switch (text[pos])
+        {
+        case '\t':
+            // INTENDED FALLTHROUGH! avoids double code
+        case 32:  // space
+            if (mode != NORMAL)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+                break;
+            }
+            cntrl = handleSeperator(&instructs, token, text, &idx, &pos, &dir);
+            if (cntrl < 0)
+            {
+                return -1;  // error occured, message will be given by exited funct
+            }
+            break;
+        case '|':  // pipe
+            if (mode != NORMAL)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+                break;
+            }
+            cntrl = handleConnectors(&instructs, list, PIPE);
+            if (cntrl < 0)
+            {
+                // error message thrown by exited funtion
+                return -1;  // caller responsible for cleanup
+            }
+            idx = 0;  // a connector is the end of a token
+            pos++;    // move position
+            break;
+
+        case ';':  // seq operator
+            if (mode != NORMAL)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+                break;
+            }
+            cntrl = handleConnectors(&instructs, list, SEQ);
+            if (cntrl < 0)
+            {
+                // error message thrown by exited funtion
+                return -1;  // caller responsible for cleanup
+            }
+            idx = 0;  // a connector is the end of a token
+            pos++;    // move position
+            break;
+
+        case '"':  // double quote
+            switchModes(&mode, text[pos]);
+            pos++;  // this skips the quotes so they dont land in the token
+            if (!text[pos])
+            {
+                token[idx] = '\0';
+            }
+            break;
+
+        case 39:  // single quote
+            switchModes(&mode, text[pos]);
+            pos++;  // this skips the quotes so they dont land in the token
+            if (!text[pos])
+            {
+                token[idx] = '\0';
+            }
+            break;
+
+        case '>':
+            if (mode != NORMAL)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+                break;
+            }
+            if (switchDirect(&dir, token, idx) == 0)
+            {
+                token[idx] = text[pos];
+                pos++;
+                idx++;
+                
+            }
+            else
+            {
+                return -1;  // syntax error, handled by switchDirect
+            }
+            break;
+
+        case '<':
+            if (mode != NORMAL)
+            {
+                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+                break;
+            }
+            if (idx > 0)  // < can only stand alone
+            {
+                error = SYNTAX_ERROR;
+                printError(error, &text[pos]);
+                return -1;
+            }
+            dir = REDIR_IN;
+            pos++;
+            idx++;
+            break;
+
+        default:
+            cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+            if (cntrl < 0)
+            {
+                return -1;  // error occured, message will be given by exited funct
+            }
+            // adds the final instruction to list
+            if (!text[pos])
+            {
+                cntrl = handleConnectors(&instructs, list, END);
+                if (cntrl < 0)
+                {
+                    return -1;  // error occured, message will be given by exited funct
+                }
+            }
+            break;
+        }
+    }
+    // if nothing was added to instructs we need to clean up locally
+    if (list->size == 1)
+    {
+        cleanupInstructs(&instructs);
+    }
+    return 0;
+}
+
+/// @brief initializes a struct of type instructions
 /// @param cmd
 /// @return returns 0 if successful, -1 if not
-int initCMD(command *cmd_)
+int initInstructs(Instructions *cmd_)
 {
     // initializes all struct variables
     for (int i = 0; i < 10; i++)
@@ -361,13 +422,12 @@ int initCMD(command *cmd_)
         cmd_->redir[i].stream = -1;
         cmd_->redir[i].target = NULL;
     }
-    cmd_->pipes = NULL;
-    cmd_->pipecalls = 0;
+    cmd_->capac = 30;
     cmd_->parseamt = 0;
     cmd_->rdrctns = 0;
-    cmd_->parsed = NULL;
-    cmd_->parsed = calloc(30, sizeof(char *)); // base length, gets doubled if nessecary
-    if (cmd_->parsed == NULL)
+    cmd_->args = NULL;
+    cmd_->args = calloc(cmd_->capac, sizeof(char *));  // base length, gets doubled if nessecary
+    if (cmd_->args == NULL)
     {
         perror("malloc");
         return -1;
@@ -376,28 +436,59 @@ int initCMD(command *cmd_)
     return 0;
 }
 
-/// @brief frees allocated memory of a command struct
+int initInstructList(InstructList *list)
+{
+    list->connects = malloc(sizeof(CONNECTOR));
+    if (list->connects == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+    list->instructs = malloc(sizeof(Instructions));
+    if (list->instructs == NULL)
+    {
+        perror("malloc");
+        return -1;
+    }
+    list->size = 1;  // Sentinel slot
+    return 0;
+}
+
+/// @brief function cleansup an entire instructlist struct
+/// @param list
+void cleanupInstructList(InstructList *list)
+{
+    // this frees every malloced argument token, and every conntector in the connects array
+    for (int i = 0; i < list->size - 1; i++)
+    {
+        for (int j = 0; j < list->instructs[i].parseamt; j++)
+        {
+            free(list->instructs[i].args[j]);
+        }
+        free(list->instructs[i].args);  // frees the ralloc block of the given args array
+        // this free all redirection targets of every instruction
+        for (int j = 0; j < list->instructs[i].rdrctns; j++)
+        {
+            free(list->instructs[i].redir[j].target);
+        }
+    }
+
+    free(list->instructs);  // frees the instructs array
+    free(list->connects);   // frees the connects array
+}
+
+/// @brief frees allocated memory of a Instructions struct
 /// @param cmd_
-void cleanupCMD(command *cmd_)
+void cleanupInstructs(Instructions *cmd_)
 {
     for (int i = 0; i < cmd_->parseamt; i++)
     {
-        free(cmd_->parsed[i]);
+        free(cmd_->args[i]);
     }
-    free(cmd_->parsed);
+    free(cmd_->args);
 
-    // checks for pipecalls and frees alls args
-    for (int i = 0; i < cmd_->pipecalls; i++)
-    {
-        free(cmd_->pipes[i].args); 
-    }
-    free(cmd_->pipes);
-
-    /* in case of an error during the setup of filedescriptors
-        this closes every previously opend one and returns -1*/
     for (int i = 0; i < cmd_->rdrctns; i++)
     {
         free(cmd_->redir[i].target);
-        close(cmd_->redir[i].stream);
     }
 }
