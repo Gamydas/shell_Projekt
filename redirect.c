@@ -9,8 +9,9 @@
 #include "err.h"
 #include "str.h"
 
-/// @brief           opens up filedesciptors for a given redirect object, closing needs
-///                  to be handled by the calling function
+/// @brief  opens up filedesciptors for a given redirect object, then dup2s
+///         them to the desired channel and closes the fd, no file leaks
+///         can happen here
 /// @param direction what type of redirect is called
 /// @param target    target of redirection
 /// @return          returns 0 if redirection was succesful, -1 otherwise
