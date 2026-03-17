@@ -4,8 +4,13 @@
 #include <unistd.h>
 
 #include "str.h"
-#include "tools.h"
 
+/// @brief kills calling process
+/// @param text ignores everything typed after exit
+void shell_exit(char* text)
+{
+    exit(0);
+}
 /// @brief function to change the current working directory
 /// @param dir directory to be changed to
 void cd(char* dir)
@@ -35,7 +40,7 @@ void cd(char* dir)
 }
 
 /// @brief prints current working directory
-void pwd()
+void pwd(char *)
 {
     char temp[2048];
     printf("%s\n", getcwd(temp, 2048));
