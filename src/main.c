@@ -14,7 +14,7 @@
 #include "pipelining.h"
 #include "exec.h"
 
-int main(int argc, char *argv[])
+int main()
 {
     ERR error = NO_ERROR;
     shell myShell;

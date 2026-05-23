@@ -90,7 +90,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
     // declerations for parent
     int out_fd = 0;
     int err_fd = 0;
-    int in_fd =  0;
+    int in_fd = 0;
 
     int cntrl = 0;
     // sets up redirections for parents process, redirects for pipes are handles by setUpPipe
@@ -99,13 +99,16 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
         // local copies of the standard datachannels to restore them after redirections
         out_fd = dup(STDOUT_FILENO);
         err_fd = dup(STDERR_FILENO);
-        in_fd  = dup(STDIN_FILENO);
+        in_fd = dup(STDIN_FILENO);
 
         for (int i = 0; i < instructs->rdrctns; i++)
         {
             cntrl = handleRedirections(&instructs->redir[i]);
             if (cntrl < 0)
             {
+                close(out_fd);
+                close(in_fd);
+                close(err_fd);
                 return -1;
             }
         }

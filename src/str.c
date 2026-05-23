@@ -100,7 +100,6 @@ int strcomp(char *first, char *second)
 void findPrefix(char** arr, char* prefix, int size)
 {
     int found = 0;                                
-    int brk = 0;                                 // flag to break out of outer for loop
     for (int i = 1; i < size; i++)
     {
 

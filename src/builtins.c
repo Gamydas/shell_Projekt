@@ -9,6 +9,9 @@
 /// @param text ignores everything typed after exit
 void shell_exit(char *text)
 {
+    if (text != NULL)
+	    exit(0);
+
     exit(0);
 }
 /// @brief function to change the current working directory
@@ -45,6 +48,11 @@ void cd(char *dir)
 /// @brief prints current working directory
 void pwd(char *flags)
 {
+    if (flags != NULL)
+    {
+         fprintf(stderr, "unknown flag:%s \n", flags);
+	 return;
+    }
     char temp[2048];
     printf("%s\n", getcwd(temp, 2048));
 }
