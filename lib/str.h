@@ -16,5 +16,5 @@ void delInStr(char* text, int idx);
 void insertInStr(char* text, char c, int idx, int size);
 void initStr(char* text, int c, int size);
 int increaseCapac(char*** array, int* capac, int amt);
-int allocStrCopy(char* origin, char** dest);
+int allocStrCopy(char* origin, char** dest, int orig_size);
 #endif

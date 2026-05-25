@@ -215,10 +215,11 @@ int increaseCapac(char*** array, int* capac, int amt)
 /// @brief this function allocates memory the size of strlen(*origin + 1) for dest and copys origin into dest
 /// @param origin 
 /// @param dest 
+/// @param orig_size length of origin WITHOUT Nullterm
 /// @return return 0 if success, -1 if failue
-int allocStrCopy(char* origin, char** dest)
+int allocStrCopy(char* origin, char** dest, int orig_size)
 {
-    *dest =  malloc(strLen(origin) + 1);  // +1 for \0
+    *dest =  malloc(orig_size + 1);  // +1 for \0
     if (*dest == NULL)
     {
         perror("malloc");
