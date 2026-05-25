@@ -184,7 +184,7 @@ int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, i
         }
     }
     // adds the finished token to the arguments array
-    cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt]);
+    cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt], strLen(token));
     if (cntrl < 0)
     {
         return -1;
@@ -238,7 +238,7 @@ int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int
         }
         // enters token into the parsed arrays
         // transfers the token into the parsed arr of the cmd struct
-        cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt]);
+        cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt], strLen(token));
         if (cntrl < 0)
         {
             return -1;  // malloc error
