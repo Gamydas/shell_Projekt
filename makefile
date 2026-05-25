@@ -21,8 +21,17 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
  
 
+TEST_SRC = tests/test_history.c src/history.c src/str.c src/err.c
+TEST_BIN = tests/test_history
+
+test: $(TEST_BIN)
+	./$(TEST_BIN)
+
+$(TEST_BIN): $(TEST_SRC)
+	$(CC) $(CFLAGS) -W -Wextra -Wall -o $(TEST_BIN) $(TEST_SRC)
+
 clean:
-	rm -f $(OBJ) $(PRG) $(PRG)_debug
+	rm -f $(OBJ) $(PRG) $(PRG)_debug $(TEST_BIN)
 
 run:
 	./$(PRG)
