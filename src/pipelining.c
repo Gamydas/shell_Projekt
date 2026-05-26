@@ -14,7 +14,7 @@
 /// @brief checks for the pipe instruction via "|" and handles it via fork/exec
 /// @param sh
 /// @return returns 0 if a pipeline happend, and -1 if not
-int setUpPipes(Instructions *instruct, int size)
+int setup_pipes(Instructions *instruct, int size)
 {
     int pipes[size][2];  // these will be the I/O pipes for the pipeline
 
@@ -26,7 +26,7 @@ int setUpPipes(Instructions *instruct, int size)
         if (p < 0)
         {
             perror("pipe");
-            closePipes(pipes, i);
+            close_pipes(pipes, i);
             return -1;
         }
     }
@@ -37,7 +37,7 @@ int setUpPipes(Instructions *instruct, int size)
         if (rc < 0)  // forking failed
         {
             perror("fork");
-            closePipes(pipes, size);
+            close_pipes(pipes, size);
             return -1;
         }
         else if (rc == 0)
@@ -48,7 +48,7 @@ int setUpPipes(Instructions *instruct, int size)
                 int cntrl = handleRedirections(&instruct[i].redir[j]); 
                 if (cntrl < 0)
                 {
-                    closePipes(pipes, size);
+                    close_pipes(pipes, size);
                     exit(1);
                 }
             }
@@ -59,7 +59,7 @@ int setUpPipes(Instructions *instruct, int size)
                 if (a < 0)
                 {
                     perror("dup2");
-                    closePipes(pipes, size);
+                    close_pipes(pipes, size);
                     exit(1);
                 }
             }
@@ -69,7 +69,7 @@ int setUpPipes(Instructions *instruct, int size)
                 if (a < 0)
                 {
                     perror("dup2");
-                    closePipes(pipes, size); 
+                    close_pipes(pipes, size); 
                     exit(1);
                 }
             }
@@ -81,24 +81,24 @@ int setUpPipes(Instructions *instruct, int size)
                 if (a < 0)
                 {
                     perror("dup2");
-                    closePipes(pipes, size);
+                    close_pipes(pipes, size);
                     exit(1);
                 }
                 a = dup2(pipes[i][1], STDOUT_FILENO);
                 if (a < 0)
                 {
                     perror("dup2");
-                    closePipes(pipes, size);
+                    close_pipes(pipes, size);
                     exit(1);
                 }
             }
-            closePipes(pipes, size);
+            close_pipes(pipes, size);
             return i;  // returns position in the pipe
         }
     }
 
     // closing all pipes in parent to avoid leaks
-    closePipes(pipes, size);
+    close_pipes(pipes, size);
     // parent waits for all children to terminate
     while (wait(0) > 0);
     return PARENT_PROCCESS;
@@ -107,7 +107,7 @@ int setUpPipes(Instructions *instruct, int size)
 /// @brief function closes every opend pipe it gets pased
 /// @param pipes a pipe[size][2] array of pipes to close
 /// @param size amount of pipe[2] arrays
-void closePipes(int pipes[][2], int size)
+void close_pipes(int pipes[][2], int size)
 {
     // closes all pipes before returning
     for (int z = 0; z < size; z++)

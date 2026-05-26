@@ -34,7 +34,7 @@ int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
         }
         if (pipecalls > 0)
         {
-            ID = setUpPipes(&list->instructs[begin], pipecalls);
+            ID = setup_pipes(&list->instructs[begin], pipecalls);
             if (ID < 0)
             {
                 return -1;  // caller handles cleanup

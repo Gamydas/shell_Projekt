@@ -7,8 +7,8 @@
 
 #define PARENT_PROCCESS INT_MAX // used as a return value to know which is the parent process when returning
 
-int setUpPipes(Instructions *instruct, int size);
-void closePipes(int pipes[][2], int size);
+int setup_pipes(Instructions *instruct, int size);
+void close_pipes(int pipes[][2], int size);
 
 
 #endif
