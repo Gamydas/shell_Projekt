@@ -91,7 +91,7 @@ int handleArrows(shell* sh, rawInput* cmd_)
                 break;
 
             case 'B':  // arrow down
-                if (last_entry != NULL && sh->histpos == last_entry->entry_ID + 1)
+                if ((sh->histpos == 0 && last_entry == NULL) ||  sh->histpos == last_entry->entry_ID + 1)
                 {
                     printf("\a");
                     fflush(stdout);
