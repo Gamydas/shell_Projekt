@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "err.h"
+#include "../lib/err.h"
 #include "redirect.h"
 #include "str.h"
 
@@ -17,7 +17,7 @@
 ///        purpose. More documentation on special characters follows
 /// @param mode
 /// @param c
-void switchModes(MODUS *mode, char c)
+void switch_modes(parseMode *mode, char c)
 {
     switch (c)
     {
@@ -62,7 +62,7 @@ void switchModes(MODUS *mode, char c)
 /// @brief adds a new item to the list of instructions and ensures connects and instructs dont drift apart in size
 /// @param list
 /// @return
-int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect)
+int add_segment(InstructList *list, Instructions *instructs, CONNECTOR connect)
 {
     list->size++;  // first increase size
     Instructions *temp = realloc(list->instructs, list->size * sizeof(Instructions));
@@ -98,11 +98,11 @@ int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect)
     return 0;
 }
 
-int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR connect)
+int handle_connectors(Instructions *instructs, InstructList *list, CONNECTOR connect)
 {
     instructs->parseamt++;                        // parseamt can never reach capac before this, so no realloc check needed, just place sentinel
     instructs->args[instructs->parseamt] = NULL;  // NULL sentinel
-    int cntrl = addSegment(list, instructs, connect);
+    int cntrl = add_segment(list, instructs, connect);
     if (cntrl < 0)
     {
         // error message thrown by exited funtion
@@ -110,7 +110,7 @@ int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR conn
     }
     if (connect != END)
     {
-        cntrl = initInstructs(instructs);  // resets instruction object and creates new memory adresses, i.e a totally new item
+        cntrl = initialize_instructs(instructs);  // resets instruction object and creates new memory adresses, i.e a totally new item
         if (cntrl < 0)
         {
             // error message thrown by exited funtion
@@ -130,7 +130,7 @@ int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR conn
 /// @param pos position in text
 /// @param type
 /// @return 0 if success, -1 if error
-int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type)
+int handle_seperators(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type)
 {
     int cntrl = 0;
 
@@ -201,7 +201,7 @@ int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, i
 /// @param idx  current idex of token
 /// @param pos position in text
 /// @return
-int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR type)
+int append_to_token(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR type)
 {
     int cntrl = 0;
     if (text[*pos])
@@ -253,17 +253,17 @@ int appendToToken(Instructions *instruct, char *token, char *text, int *idx, int
 /// @param list list item
 /// @param text raw Input, usually handed by input.c module
 /// @return 0 if success, -1 if error
-int parseInput(InstructList *list, char *text)
+int parse_input(InstructList *list, char *text)
 {
     ERR error = NO_ERROR;
-    MODUS mode = NORMAL;
+    parseMode mode = NORMAL;
     REDIR dir = NO_REDIR;
     int cntrl = 0;
     int idx = 0;
     int pos = 0;
     char token[PATH_MAX];
     Instructions instructs;
-    initInstructs(&instructs);
+    initialize_instructs(&instructs);
     while (text[pos])
     {
         switch (text[pos])
@@ -273,28 +273,28 @@ int parseInput(InstructList *list, char *text)
         case 32:  // space
             if (mode != NORMAL)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
-            cntrl = handleSeperator(&instructs, token, text, &idx, &pos, &dir);
+            cntrl = handle_seperators(&instructs, token, text, &idx, &pos, &dir);
             if (cntrl < 0)
             {
-                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;                     // error occured, message will be given by exited funct
             }
             break;
         case '|':  // pipe
             if (mode != NORMAL)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
@@ -304,14 +304,14 @@ int parseInput(InstructList *list, char *text)
             {
                 error = SYNTAX_ERROR;
                 printError(error, &text[pos]);
-                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;
             }
-            cntrl = handleConnectors(&instructs, list, PIPE);
+            cntrl = handle_connectors(&instructs, list, PIPE);
             if (cntrl < 0)
             {
                 // error message thrown by exited funtion
-                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;                     // caller responsible for cleanup
             }
             idx = 0;  // a connector is the end of a token
@@ -321,18 +321,18 @@ int parseInput(InstructList *list, char *text)
         case ';':  // seq operator
             if (mode != NORMAL)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
-            cntrl = handleConnectors(&instructs, list, SEQ);
+            cntrl = handle_connectors(&instructs, list, SEQ);
             if (cntrl < 0)
             {
-                /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
+                /* DO NOT CLEANUPINSTRUCT HERE! if  handle_connectors fails now new instruct was initialized 
                    i.e every currently existing malloced instruct is part of list, which will be freed as a
                    whole by main*/
                 // error message thrown by exited funtion
@@ -346,15 +346,15 @@ int parseInput(InstructList *list, char *text)
             // double quote loses its meaning in single quotes
             if (mode == SINGLE_QUOTES)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
-            switchModes(&mode, text[pos]);
+            switch_modes(&mode, text[pos]);
             pos++;  // this skips the quotes so they dont land in the token
             break;
 
@@ -362,25 +362,25 @@ int parseInput(InstructList *list, char *text)
             // single quote loses its meaning in double quotes
             if (mode == DOUBLE_QUOTES) 
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
             }
-            switchModes(&mode, text[pos]);
+            switch_modes(&mode, text[pos]);
             pos++;  // this skips the quotes so they dont land in the token
             break;
 
         case '>':
             if (mode != NORMAL)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
@@ -393,7 +393,7 @@ int parseInput(InstructList *list, char *text)
             }
             else
             {
-                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;                     // syntax error, handled by switchDirect
             }
             break;
@@ -401,10 +401,10 @@ int parseInput(InstructList *list, char *text)
         case '<':
             if (mode != NORMAL)
             {
-                cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+                cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
-                    cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                    cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                     return -1;                     // error occured, message will be given by exited funct
                 }
                 break;
@@ -422,10 +422,10 @@ int parseInput(InstructList *list, char *text)
             break;
 
         default:
-            cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+            cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
             if (cntrl < 0)
             {
-                cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+                cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;                     // error occured, message will be given by exited funct
             }
             
@@ -434,16 +434,16 @@ int parseInput(InstructList *list, char *text)
     }
 
     // final token when text[pos] reaches \0
-    cntrl = appendToToken(&instructs, token, text, &idx, &pos, dir);
+    cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
     if (cntrl < 0)
     {
-        cleanupInstructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
+        cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
         return -1;                     // error occured, message will be given by exited funct
     }
-    cntrl = handleConnectors(&instructs, list, END);
+    cntrl = handle_connectors(&instructs, list, END);
     if (cntrl < 0)
     {
-        /* DO NOT CLEANUPINSTRUCT HERE! if  handleconnectors fails now new instruct was initialized 
+        /* DO NOT CLEANUPINSTRUCT HERE! if  handle_connectors fails now new instruct was initialized 
                        i.e every currently existing malloced instruct is part of list, which will be freed as a
                      whole by main*/
         return -1;  // error occured, message will be given by exited funct
@@ -452,7 +452,7 @@ int parseInput(InstructList *list, char *text)
     // if nothing was added to instructs we need to clean up locally
     if (list->size == 1)
     {
-        cleanupInstructs(&instructs);
+        cleanup_instructs(&instructs);
         return 0;
     }
 
@@ -462,7 +462,7 @@ int parseInput(InstructList *list, char *text)
 /// @brief initializes a struct of type instructions
 /// @param cmd
 /// @return returns 0 if successful, -1 if not
-int initInstructs(Instructions *cmd_)
+int initialize_instructs(Instructions *cmd_)
 {
     // initializes all struct variables
     for (int i = 0; i < 10; i++)
@@ -485,7 +485,7 @@ int initInstructs(Instructions *cmd_)
     return 0;
 }
 
-int initInstructList(InstructList *list)
+int initialize_instruct_list(InstructList *list)
 {
     list->connects = malloc(sizeof(CONNECTOR));
     if (list->connects == NULL)
@@ -505,7 +505,7 @@ int initInstructList(InstructList *list)
 
 /// @brief function cleansup an entire instructlist struct
 /// @param list
-void cleanupInstructList(InstructList *list)
+void cleanup_instruct_list(InstructList *list)
 {
     // this frees every malloced argument token, and every conntector in the connects array
     for (int i = 0; i < list->size - 1; i++)
@@ -528,7 +528,7 @@ void cleanupInstructList(InstructList *list)
 
 /// @brief frees allocated memory of a Instructions struct
 /// @param cmd_
-void cleanupInstructs(Instructions *cmd_)
+void cleanup_instructs(Instructions *cmd_)
 {
     for (int i = 0; i < cmd_->parseamt; i++)
     {

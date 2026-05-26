@@ -8,7 +8,7 @@ typedef enum
     DOUBLE_QUOTES,
     NORMAL,
 
-} MODUS;
+} parseMode;
 
 typedef enum
 {
@@ -34,13 +34,14 @@ typedef struct
     int size;                 // size of given instruc list
 } InstructList;
 
-int addSegment(InstructList *list, Instructions *instructs, CONNECTOR connect);
-int handleConnectors(Instructions *instructs, InstructList *list, CONNECTOR connect);
-int handleSeperator(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type);
-int parseInput(InstructList *list, char *text);
-void switchModes(MODUS *mode, char c);
-int initInstructs(Instructions *instructs);
-int initInstructList(InstructList *list);
-void cleanupInstructs(Instructions *instructs);
-void cleanupInstructList(InstructList *list);
+int add_segment(InstructList *list, Instructions *instructs, CONNECTOR connect);
+int handle_connectors(Instructions *instructs, InstructList *list, CONNECTOR connect);
+int handle_seperators(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR *type);
+int append_to_token(Instructions *instruct, char *token, char *text, int *idx, int *pos, REDIR type);
+int parse_input(InstructList *list, char *text);
+void switch_modes(parseMode *mode, char c);
+int initialize_instructs(Instructions *instructs);
+int initialize_instruct_list(InstructList *list);
+void cleanup_instructs(Instructions *instructs);
+void cleanup_instruct_list(InstructList *list);
 #endif
