@@ -202,6 +202,7 @@ void print_history()
 }
 
 /// @brief clears the entire shells history and frees all allocated memeory
+///        caller file needs to include the global first_entry variable
 void clear_shell_history()
 {
     shHist *temp = NULL;
