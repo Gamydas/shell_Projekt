@@ -12,6 +12,7 @@ extern shHist *first_entry;
 /// @param text ignores everything typed after exit
 void shell_exit(char *text)
 {
+    write_history_to_file();
     clear_shell_history();
     if (text != NULL)
 	    exit(0);
