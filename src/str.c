@@ -7,7 +7,7 @@
 /// @brief function copies contents of origin into dest
 /// @param origin original message that is to be copied
 /// @param dest destination of the copy command
-void strcopy(char *origin, char *dest)
+void str_copy(char *origin, char *dest)
 {
     while (*origin)
     {
@@ -22,7 +22,7 @@ void strcopy(char *origin, char *dest)
 /// @param origin original message that is to be copied
 /// @param dest destination of the copy command
 /// @return returns 0 if successful and -1 if there was a problem i.e. end was greater than the actual remaining string size
-int strcopySeg(char *origin, char *dest, int start, int end)
+int segment_str_copy(char *origin, char *dest, int start, int end)
 {
     // checking if an interval is valid or not
     if (start > end)
@@ -50,7 +50,7 @@ int strcopySeg(char *origin, char *dest, int start, int end)
 
 /// @brief converts the given Text into lowercase letters
 /// @param Text
-void tlc(char *Text)
+void to_lower_case(char *Text)
 {
     int i = 0;
     while (*(Text + i))
@@ -68,7 +68,7 @@ void tlc(char *Text)
 /// @param first
 /// @param second
 /// @return returns 0 if both strings are identical, -1 otherwise and 1 if identical to the end of the first one i.e it was shorter but identical to the end
-int strcomp(char *first, char *second)
+int str_comp(char *first, char *second)
 {
     int i = 0;
     while (*(first + i) && *(second + i))
@@ -82,7 +82,7 @@ int strcomp(char *first, char *second)
 
     if (*(first + i) != *(second + i)) // checks if one of the strings was shorter and thus not identical
     {
-        if(strLen(second) < strLen(first))
+        if(str_len(second) < str_len(first))
         {
             return -1;
         }
@@ -94,35 +94,32 @@ int strcomp(char *first, char *second)
 
 /// @brief function finds the greates shared prefix in a char**, i.e a string array
 ///        and writes it into prefix
-/// @param arr char**
-/// @param prefix 
+/// @param arr array of strings from which the shared prefix will be determinted
+/// @param prefix string that stores prefix, needs to be allocated by caller
 /// @param size first dimension of array
-void findPrefix(char** arr, char* prefix, int size)
+void find_prefix(char** arr, char* prefix, int size)
 {
-    int found = 0;                                
-    for (int i = 1; i < size; i++)
+    // nothing to search through
+    if (arr == NULL) return;
+    // taking first entry as reference point
+    str_copy(arr[0], prefix);                            
+    for (int i = 0; i < size; i++)
     {
-
-        for (int j = 0; j < strLen(arr[0]); j++)    
+        for (int j = 0; j < str_len(arr[0]); j++)    
         {
-            if (arr[0][j] == arr[i][j] && j == found)
+            if (prefix[j] != arr[i][j])
             {
-                prefix[j] = arr[0][j];
-                found++;
-            } else if(arr[0][j] != arr[i][j])
-            {
+                prefix[j] = '\0';
                 break;
             }
         }
     }
-    // appends 0 to the end of found prefix, if found 0 this also just inserts a 0
-    prefix[found] = '\0';
 }
 
 /// @brief counts every character in a string
 /// @param text 
 /// @return returns sum of characters
-int strLen(char* text)
+int str_len(char* text)
 {
     int i = 0;
     while(*(text + i))
@@ -135,7 +132,7 @@ int strLen(char* text)
 /// @brief deletes a char in a string and connects the two ends together
 /// @param text 
 /// @param idx index at which character is to be deleted
-void delInStr(char* text, int idx)
+void delete_in_string(char* text, int idx)
 {
     
     while (*(text + idx + 1))
@@ -152,7 +149,7 @@ void delInStr(char* text, int idx)
 /// @param c character to be inserted
 /// @param idx index at which the character is to be inserted
 /// @param size length of text
-void insertInStr(char* text, char c, int idx, int size)
+void insert_in_string(char* text, char c, int idx, int size)
 {
     // checking if idx is within bounds of the string size(-1 to make sure character fits the string)
         if(idx >= size|| idx <0) 
@@ -185,7 +182,7 @@ void insertInStr(char* text, char c, int idx, int size)
 /// @param text 
 /// @param c constant to fill the string with
 /// @param size size of string
-void initStr(char* text, int c, int size)
+void initialize_string(char* text, int c, int size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -199,7 +196,7 @@ void initStr(char* text, int c, int size)
 /// @param capac current capacity that is to be increased
 /// @param amt   amt that is to be added to capac
 /// @return returns 0 on success and -1 on failure
-int increaseCapac(char*** array, int* capac, int amt)
+int increase_capacity(char*** array, int* capac, int amt)
 {
     char** temp = realloc(*array, (*capac + amt) * sizeof(char*));
     if (temp == NULL)
@@ -212,12 +209,12 @@ int increaseCapac(char*** array, int* capac, int amt)
     return 0;
 }
 
-/// @brief this function allocates memory the size of strlen(*origin + 1) for dest and copys origin into dest
+/// @brief this function allocates memory the size of str_len(*origin + 1) for dest and copys origin into dest
 /// @param origin 
 /// @param dest 
 /// @param orig_size length of origin WITHOUT Nullterm
 /// @return return 0 if success, -1 if failue
-int allocStrCopy(char* origin, char** dest, int orig_size)
+int alloc_str_copy(char* origin, char** dest, int orig_size)
 {
     *dest =  malloc(orig_size + 1);  // +1 for \0
     if (*dest == NULL)
@@ -225,7 +222,7 @@ int allocStrCopy(char* origin, char** dest, int orig_size)
         perror("malloc");
         return -1;
     }
-    strcopy(origin, *dest);
+    str_copy(origin, *dest);
     return 0;
 }
 
@@ -237,7 +234,7 @@ int allocStrCopy(char* origin, char** dest, int orig_size)
 /// @param string string that the char is to be removed from
 /// @param c      char that is to be removed
 /// @param string_size    length of string (without nullterm)
-void cutFromEnd(char *string, char c, int string_size)
+void cut_character_from_end(char *string, char c, int string_size)
 {
     // to avoid over/underflows
     if (string_size < 1) return;
