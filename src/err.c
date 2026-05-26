@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "err.h"
+#include "../lib/err.h"
 
 /// @brief prints out different error messages, depending on passed error
 /// @param error error object passed to indicate which case happend
