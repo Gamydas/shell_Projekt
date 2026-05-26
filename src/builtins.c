@@ -4,11 +4,15 @@
 #include <unistd.h>
 
 #include "str.h"
+#include "history.h"
+
+extern shHist *first_entry;
 
 /// @brief kills calling process
 /// @param text ignores everything typed after exit
 void shell_exit(char *text)
 {
+    clear_shell_history();
     if (text != NULL)
 	    exit(0);
 
