@@ -16,7 +16,7 @@ extern shHist* last_entry;
 /// @brief initializes struct of rawInput type
 /// @param input
 /// @return 0 for success, -1 for error
-int initRaw(rawInput* input)
+int initialize_rawinput(rawInput* input)
 {
     input->capac = 2048;  // base capacity of input string, will be doubled if needed
     input->cursoridx = 0;
@@ -31,7 +31,7 @@ int initRaw(rawInput* input)
 
 /// @brief frees an object of type rawInput
 /// @param input
-void freeRaw(rawInput* input)
+void free_rawinput(rawInput* input)
 {
     free(input->cmd);
 }
@@ -40,7 +40,7 @@ void freeRaw(rawInput* input)
 /// @param sh
 /// @param cmd_
 /// @return 0 if success, -1 if an error occured
-int handleArrows(shell* sh, rawInput* cmd_)
+int handle_arrows(shell* sh, rawInput* cmd_)
 {
     char c = '\0';
     int rd = read(0, &c, 1);
@@ -139,7 +139,7 @@ int handleArrows(shell* sh, rawInput* cmd_)
 
 /// @brief function to reposition cursor on the screen
 /// @param cursoridx value that indicates where the curoser is currently positioned
-void reposCurs(int cursoridx)
+void reposition_cursor(int cursoridx)
 {
     // adjust cursor if <- or -> were pressed
     printf("\r");
@@ -155,7 +155,7 @@ void reposCurs(int cursoridx)
 /// @param Prompt giving prompt by calling function, i.e. cwd
 /// @param cmd string which will be interpreted as a command
 /// @return returns length of read input, -1 if an error occured
-int getInput(shell* sh, rawInput* cmd_)
+int get_input(shell* sh, rawInput* cmd_)
 {
     tabComp tab;
     // at this point only these 2 fields are relevant to initialize, remaining fields get initialized when needed
@@ -240,7 +240,7 @@ int getInput(shell* sh, rawInput* cmd_)
                     // refreshes the screen
                     printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                     fflush(stdout);
-                    reposCurs(cmd_->cursoridx);
+                    reposition_cursor(cmd_->cursoridx);
                 }
                 else
                 {
@@ -251,7 +251,7 @@ int getInput(shell* sh, rawInput* cmd_)
                 break;
 
             case '\033':  // checks for all inputs starting with \033 mainly for arrow keys, ignoring every other instruction that begins like this, might add more later
-                if (handleArrows(sh, cmd_) < 0)
+                if (handle_arrows(sh, cmd_) < 0)
                 {
                     tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
                     return -1;
@@ -259,7 +259,7 @@ int getInput(shell* sh, rawInput* cmd_)
                 // refreshes the screen
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
-                reposCurs(cmd_->cursoridx);
+                reposition_cursor(cmd_->cursoridx);
 
                 len = strLen(cmd_->cmd);
                 cleanupTab(&tab);  // avoid memory leaks
@@ -299,7 +299,7 @@ int getInput(shell* sh, rawInput* cmd_)
                 // refreshing screen
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
-                reposCurs(cmd_->cursoridx);
+                reposition_cursor(cmd_->cursoridx);
 
                 cleanupTab(&tab);  // avoid memory leaks
                 break;

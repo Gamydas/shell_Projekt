@@ -13,10 +13,10 @@ typedef struct rawInput
 
 } rawInput;
 
-int initRaw(rawInput *input);
-void freeRaw(rawInput *input);
-int getInput(shell* sh, rawInput* cmd_);
-int handleArrows(shell* sh, rawInput* cmd_);
-void reposCurs(int cursoridx);
+int initialize_rawinput(rawInput *input);
+void free_rawinput(rawInput *input);
+int get_input(shell* sh, rawInput* cmd_);
+int handle_arrows(shell* sh, rawInput* cmd_);
+void reposition_cursor(int cursoridx);
 #endif
 

@@ -40,11 +40,11 @@ int main()
     HOME;
     while (1)
     {
-        int control = initRaw(&userInput);
+        int control = initialize_rawinput(&userInput);
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
-            print_error(error, "initRaw");
+            print_error(error, "initialize_rawinput");
             continue;
         }
         control = initialize_instruct_list(&instructions);
@@ -52,17 +52,17 @@ int main()
         {
             error = INITIALIZATION_ERROR;
             print_error(error, "initialize_instruct_list");
-            freeRaw(&userInput); 
+            free_rawinput(&userInput); 
             continue;
         }
         // loading the current directory into it wdir string
         getcwd(myShell.wdir, sizeof(myShell.wdir));
 
         // loading the user command into cmd string
-        control = getInput(&myShell, &userInput);
+        control = get_input(&myShell, &userInput);
         if (control < 0)
         {
-            freeRaw(&userInput);
+            free_rawinput(&userInput);
             cleanup_instruct_list(&instructions);
             continue;
         }
@@ -71,12 +71,12 @@ int main()
         control = parse_input(&instructions, userInput.cmd);
         if (control < 0)
         {
-            freeRaw(&userInput);
+            free_rawinput(&userInput);
             cleanup_instruct_list(&instructions);
             continue;
         }
         // is no longer needed for this loop
-        freeRaw(&userInput);
+        free_rawinput(&userInput);
         // this can happen in cases where user only types in ">"
         // or other characters that are filtered out by the parser
         if(instructions.size == 1) // only sentinel slot exists
