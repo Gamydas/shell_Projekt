@@ -22,8 +22,7 @@ int main()
     InstructList instructions;
     init_shell(&myShell);
     read_history_from_file();
-    // FOR TESTING
-    myShell.histpos = last_entry->entry_ID;
+    if(last_entry != NULL) myShell.histpos = last_entry->entry_ID + 1;
     // initialize functiontable
     Builtin builtins[] = 
     {
@@ -91,7 +90,8 @@ int main()
 
         control = executeInstructs(&instructions, myShell.bins, myShell.binamt);
         cleanupInstructList(&instructions);
-        if (control == 1) // exit was called
+        // this should never be reached since exit is handled by executeInstructs
+        if (control == 1)
         {
             return 0; 
         }
