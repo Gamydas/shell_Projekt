@@ -303,7 +303,7 @@ int parse_input(InstructList *list, char *text)
             if (instructs.parseamt == 0)
             {
                 error = SYNTAX_ERROR;
-                printError(error, &text[pos]);
+                print_error(error, &text[pos]);
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
                 return -1;
             }
@@ -412,7 +412,7 @@ int parse_input(InstructList *list, char *text)
             if (idx > 0)  // < can only stand alone
             {
                 error = SYNTAX_ERROR;
-                printError(error, &text[pos]);
+                print_error(error, &text[pos]);
                 return -1;
             }
             dir = REDIR_IN;

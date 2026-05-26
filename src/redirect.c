@@ -24,7 +24,7 @@ int handleRedirections(redirect *dir)
     if (target == NULL)
     {
         error = INVALID_ARGUMENT;
-        printError(error, "redirect");
+        print_error(error, "redirect");
         return -1;
     }
     // checks which redirection was called and opens an approriate descriptor
@@ -135,7 +135,7 @@ int switchDirect(REDIR *direction, char *token, int size)
     {
         error = SYNTAX_ERROR;
         // prints responsible char
-        printError(error, &token[size - 1]);
+        print_error(error, &token[size - 1]);
         return -1;  // no redirection operator is greater than 3 characters
     }
 
@@ -164,7 +164,7 @@ int switchDirect(REDIR *direction, char *token, int size)
             {
                 error = SYNTAX_ERROR;
                 // prints the character that caused the syntax error
-                printError(error, &token[size - 1]);
+                print_error(error, &token[size - 1]);
                 return -1;
             }
             break;

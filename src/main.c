@@ -44,14 +44,14 @@ int main()
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
-            printError(error, "initRaw");
+            print_error(error, "initRaw");
             continue;
         }
-        control = initInstructList(&instructions);
+        control = initialize_instruct_list(&instructions);
         if (control < 0)
         {
             error = INITIALIZATION_ERROR;
-            printError(error, "initInstructList");
+            print_error(error, "initialize_instruct_list");
             freeRaw(&userInput); 
             continue;
         }
@@ -63,16 +63,16 @@ int main()
         if (control < 0)
         {
             freeRaw(&userInput);
-            cleanupInstructList(&instructions);
+            cleanup_instruct_list(&instructions);
             continue;
         }
         
         // seperating the command String into the seperate instructions
-        control = parseInput(&instructions, userInput.cmd);
+        control = parse_input(&instructions, userInput.cmd);
         if (control < 0)
         {
             freeRaw(&userInput);
-            cleanupInstructList(&instructions);
+            cleanup_instruct_list(&instructions);
             continue;
         }
         // is no longer needed for this loop
@@ -82,14 +82,14 @@ int main()
         if(instructions.size == 1) // only sentinel slot exists
         {
             error = SYNTAX_ERROR;
-            printError(error, "newline");
+            print_error(error, "newline");
             error = NO_ERROR;
-            cleanupInstructList(&instructions);
+            cleanup_instruct_list(&instructions);
             continue;
         }
 
         control = executeInstructs(&instructions, myShell.bins, myShell.binamt);
-        cleanupInstructList(&instructions);
+        cleanup_instruct_list(&instructions);
         // this should never be reached since exit is handled by executeInstructs
         if (control == 1)
         {

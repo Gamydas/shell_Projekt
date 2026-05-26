@@ -58,7 +58,7 @@ shHist *find_in_history(uint16_t entry_ID)
 {
     if(last_entry == NULL)
     {
-        printError(INVALID_ARGUMENT, "history is empty");
+        print_error(INVALID_ARGUMENT, "history is empty");
         return NULL;
     }
     uint16_t dist_to_zero = entry_ID;
@@ -95,7 +95,7 @@ void delete_from_history(uint16_t entry_ID)
     if (temp == NULL)
     {
         error = INVALID_ARGUMENT;
-        printError(error, "no history entry with that ID");
+        print_error(error, "no history entry with that ID");
         // not a critical error so no return value to indicate it needed
         return;
     }
@@ -166,7 +166,7 @@ int read_history_from_file()
         int cntrl = create_and_append_new_hist_entry(line, 128);
         if (cntrl < 0)
         {
-            printError(INITIALIZATION_ERROR,"create history entry");
+            print_error(INITIALIZATION_ERROR,"create history entry");
             return -1;
         }
         // might need to remove \r\n

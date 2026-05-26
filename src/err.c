@@ -4,7 +4,7 @@
 /// @brief prints out different error messages, depending on passed error
 /// @param error error object passed to indicate which case happend
 /// @param context certain errors require context, like syntax errors, if no context is needed pass NULL
-void printError(ERR error, char* context)
+void print_error(ERR error, char* context)
 {
     switch (error)
     {

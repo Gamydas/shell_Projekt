@@ -9,5 +9,5 @@ typedef enum
     INVALID_ARGUMENT
 } ERR;
 
-void printError(ERR error, char* context);
+void print_error(ERR error, char* context);
 #endif
