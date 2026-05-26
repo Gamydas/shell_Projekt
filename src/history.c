@@ -157,6 +157,7 @@ int read_history_from_file()
         // might need to remove \r\n
     } 
     fclose(stream);
+    return 0;
 }
 
 /// @brief changes directory to home and writes the entire history to .myshellhistory
@@ -184,6 +185,7 @@ int write_history_to_file()
     }
     // closing fd/stream
     fclose(stream);   
+    return 0;
 }
 
 /// @brief prints the entire history of the shell
