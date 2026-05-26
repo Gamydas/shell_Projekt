@@ -4,7 +4,7 @@ SRC_DIR = src
 BUILD_DIR = build
 CFLAGS += -I lib/
 
-OBJ = $(addprefix $(BUILD_DIR)/, main.o input.o str.o builtins.o shell.o tab.o parser.o err.o pipelining.o redirect.o exec.o)
+OBJ = $(addprefix $(BUILD_DIR)/, main.o input.o str.o builtins.o shell.o tab.o parser.o err.o pipelining.o redirect.o exec.o history.o) 
 
 $(PRG): $(OBJ)
 	$(CC) -o $(PRG) $(OBJ)
