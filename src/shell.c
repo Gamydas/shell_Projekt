@@ -3,7 +3,7 @@
 
 /// @brief function initializes a shell struct
 /// @param sh 
-void initShell(shell* sh)
+void init_shell(shell* sh)
 {
     // integer intitializations
     sh->histpos = 0;
@@ -13,7 +13,6 @@ void initShell(shell* sh)
     initStr(sh->wdir, 0, sizeof(sh->wdir));
     for (int i = 0; i < 50; i++)
     {
-        initStr(sh->hist[i], 0, sizeof(sh->hist[i]));
         initStr(sh->builtins[i],0, sizeof(sh->builtins[0]));
     }
 
