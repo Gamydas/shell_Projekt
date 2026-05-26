@@ -140,7 +140,7 @@ int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int I
             // only for the parent, i.e the actual shell process
             if (strcomp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
             {
-                return 1;  // indicates caller that exit has been called
+                builtins[i].bin(instructs->args[1]);  // indicates caller that exit has been called
             }
             builtins[i].bin(instructs->args[1]);
             // terminates process if called by child
