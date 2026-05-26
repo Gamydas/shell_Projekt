@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
@@ -6,12 +5,10 @@
 
 #include "shell.h"
 #include "input.h"
-#include "str.h"
 #include "builtins.h"
 #include "escapesequenzen.h"
 #include "parser.h"
-#include "err.h"
-#include "pipelining.h"
+#include "../lib/err.h"
 #include "exec.h"
 
 int main()
@@ -20,7 +17,7 @@ int main()
     shell myShell;
     rawInput userInput;
     InstructList instructions;
-    initShell(&myShell);
+    init_shell(&myShell);
     // initialize functiontable
     Builtin builtins[] = 
     {

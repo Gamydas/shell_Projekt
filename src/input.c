@@ -91,7 +91,7 @@ int handleArrows(shell* sh, rawInput* cmd_)
                 break;
 
             case 'B':  // arrow down
-                if (last_entry != NULL && sh->histpos == last_entry->entry_ID)
+                if (last_entry != NULL && sh->histpos == last_entry->entry_ID + 1)
                 {
                     printf("\a");
                     fflush(stdout);
@@ -101,7 +101,8 @@ int handleArrows(shell* sh, rawInput* cmd_)
                 sh->histpos++;
                 // copying stored instruction into current input 
                 strcopy(find_in_history(sh->histpos)->entry, cmd_->cmd);  
-                
+                // repositioning cursoridx
+                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  
                 break;
             case 'C':
                 // checks if the curosr has met the rightmost edge of the command then increments cursor if not
@@ -212,8 +213,10 @@ int getInput(shell* sh, rawInput* cmd_)
                     fflush(stdout);
                     continue;
                 }
+                // appends current input into history
                 create_and_append_new_hist_entry(cmd_->cmd, strLen(cmd_->cmd));
-                sh->histpos = last_entry->entry_ID;
+                // positions history Index after the newest command
+                sh->histpos = last_entry->entry_ID + 1;
                 cleanupTab(&tab);  // avoid memory leaks
                 printf("\r\n");
                 fflush(stdout);
