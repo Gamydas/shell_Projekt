@@ -125,14 +125,21 @@ void free_history_entry(shHist *entry)
     free(entry);
 }
 
-// todo
+/// @brief reads history from the .myshell_history file in the home directory
+/// @return 0 on success, -1 on failure
 int read_history_from_file()
 {
-    char* home = getenv("HOME");
-    chdir(home);
-    FILE *stream = NULL;
+    char *home = getenv("HOME");
+    if (home == NULL)
+    {
+        perror("getenv HOME");
+        return -1;
+    }
 
-    stream = fopen(".myshellhistory", "r");
+    char path[4096];
+    snprintf(path, sizeof(path), "%s/.myshell_history", home);
+
+    FILE *stream = fopen(path, "r");
     if (stream == NULL)
     {
         perror("fopen");
@@ -160,31 +167,38 @@ int read_history_from_file()
     return 0;
 }
 
-/// @brief changes directory to home and writes the entire history to .myshellhistory
+/// @brief writes the entire history to .myshellhistory, which will
+///        be located in your home directory
 /// @return 0 if success, -1 if failure
 int write_history_to_file()
 {
-    char* home = getenv("HOME");
-    chdir(home);
-    FILE *stream = NULL;
+    
+    char *home = getenv("HOME");
+    if (home == NULL)
+    {
+        perror("getenv HOME");
+        return -1;
+    }
 
-    stream = fopen(".myshellhistory", "w");
+    // creating aboslute path to home directory
+    char path[4096];
+    snprintf(path, sizeof(path), "%s/.myshellhistory", home);
+
+    FILE *stream = fopen(path, "w");
     if (stream == NULL)
     {
         perror("fopen");
         return -1;
     }
-    // iterates over entire history list end
-    while (first_entry != NULL)
+
+    shHist *temp = first_entry;
+    while (temp != NULL)
     {
-        // prints history entry
-        fprintf(stream, first_entry->entry);
-        // linebreak
-        fputc('\n', stream);
-        first_entry = first_entry->next;
+        fprintf(stream, "%s\n", temp->entry);
+        temp = temp->next;
     }
-    // closing fd/stream
-    fclose(stream);   
+
+    fclose(stream);
     return 0;
 }
 
