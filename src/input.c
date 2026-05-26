@@ -8,6 +8,10 @@
 #include "shell.h"
 #include "str.h"
 #include "tab.h"
+#include "history.h"
+
+extern shHist* first_entry;
+extern shHist* last_entry;
 
 /// @brief initializes struct of rawInput type
 /// @param input
@@ -70,32 +74,34 @@ int handleArrows(shell* sh, rawInput* cmd_)
         switch (c)
         {
             case 'A':  // arrow up
-                if (sh->histpos == 0)
+                // ID of oldest entry & check for empty hist
+                if (sh->histpos <= 1)
                 {
                     printf("\a");
                     fflush(stdout);
                     break;
                 } /* checks if oldest command has been reached*/
-                if (sh->histpos > 0)
-                {
-                    strcopy(cmd_->cmd, sh->hist[sh->histpos]);                   // saves current input in history at histpos
-                    sh->histpos--;                                               // goes back into hist by 1
-                    strcopy(sh->hist[sh->histpos], cmd_->cmd);                   // copies previous instruction into the command
-                    cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  // repositioning cursoridx
-                }
+                
+                // repositioning history Index
+                sh->histpos--;
+                // copying stored instruction into current input 
+                strcopy(find_in_history(sh->histpos)->entry, cmd_->cmd);
+                // repositioning cursoridx
+                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  
                 break;
 
             case 'B':  // arrow down
-                if (sh->histpos == 50 || sh->hist[sh->histpos][0] == 0)
+                if (last_entry != NULL && sh->histpos == last_entry->entry_ID)
                 {
                     printf("\a");
                     fflush(stdout);
                     break;
-                } /* checks if newest command has been reached*/
-                strcopy(cmd_->cmd, sh->hist[sh->histpos]);  // saves current input in history at histpos
+                } 
+                // repositioning cursoridx
                 sh->histpos++;
-                strcopy(sh->hist[sh->histpos], cmd_->cmd);                   // copies previous instruction into the command
-                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  // repositioning cursoridx
+                // copying stored instruction into current input 
+                strcopy(find_in_history(sh->histpos)->entry, cmd_->cmd);  
+                
                 break;
             case 'C':
                 // checks if the curosr has met the rightmost edge of the command then increments cursor if not
@@ -160,6 +166,7 @@ int getInput(shell* sh, rawInput* cmd_)
     cmd_->cursoridx = anc;            // positions cursor at the first user eligable position
     tcsetattr(0, TCSANOW, &sh->raw);  // enters raw mode
 
+
     printf("%s: ", sh->wdir);  // display prompt
     fflush(stdout);
 
@@ -205,12 +212,8 @@ int getInput(shell* sh, rawInput* cmd_)
                     fflush(stdout);
                     continue;
                 }
-                // checks for history buffer overflows
-                if (sh->histpos < 50)
-                {
-                    strcopy(cmd_->cmd, sh->hist[sh->histpos]);
-                    sh->histpos++;
-                }
+                create_and_append_new_hist_entry(cmd_->cmd, strLen(cmd_->cmd));
+                sh->histpos = last_entry->entry_ID;
                 cleanupTab(&tab);  // avoid memory leaks
                 printf("\r\n");
                 fflush(stdout);
