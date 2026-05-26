@@ -19,9 +19,9 @@ typedef struct redirect
     char* target;
 } redirect;
 
-int switchDirect(REDIR *dir, char* token, int size);
-int handleRedirections(redirect *dir);
-int setUpRedir(redirect* redir, char* target, REDIR *type);
+int switch_directions(REDIR *dir, char* token, int size);
+int handle_redirections(redirect *dir);
+int setup_redirections(redirect* redir, char* target, REDIR *type);
 
 
 

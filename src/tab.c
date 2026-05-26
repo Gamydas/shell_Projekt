@@ -60,13 +60,13 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
     // iterates over builtins array and saves matches to tab->matches
     for (int i = 0; i < binamt; i++)  
     {
-        if (strcomp(token, builtins[i]) != -1)
+        if (str_comp(token, builtins[i]) != -1)
         {
-            int temp = strLen(builtins[i]);
+            int temp = str_len(builtins[i]);
             // checks if capacity needs to be increased
             if (tab->matchcount == tab->capac - 1)  // -1 because of sentinel slot
             {
-                int cntrl = increaseCapac(&tab->matches, &tab->capac, tab->capac); // doubles capacity
+                int cntrl = increase_capacity(&tab->matches, &tab->capac, tab->capac); // doubles capacity
                 if (cntrl < 0)
                 {
                     return -1;
@@ -79,7 +79,7 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
                 perror("malloc");
                 return -1;
             }
-            strcopy(builtins[i], tab->matches[tab->matchcount]);
+            str_copy(builtins[i], tab->matches[tab->matchcount]);
             tab->matches[tab->matchcount][temp] = 32;
             tab->matches[tab->matchcount][temp + 1] = '\0';
             tab->matchcount++;
@@ -98,16 +98,16 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
 /// @return 0 if everythin was succesfull, -1 if error occured
 int completeExecs(tabComp* tab, char* token)
 {
-    int pathlen = strLen(getenv("PATH"));
+    int pathlen = str_len(getenv("PATH"));
     char* allpaths = malloc(pathlen + 1);  // allocates memory required (+1 for 0-byte)
     if (allpaths == NULL)
     {
         perror("malloc");
         return -1;
     }
-    strcopy(getenv("PATH"), allpaths);  // makes a safely editable copy of $PATH
+    str_copy(getenv("PATH"), allpaths);  // makes a safely editable copy of $PATH
     char temp[2048];                    // temp string to load singular paths per iteration
-    initStr(temp, 0, sizeof(temp));
+    initialize_string(temp, 0, sizeof(temp));
     int count = 0;
     for (int i = 0; i < pathlen; i++)
     {
@@ -122,7 +122,7 @@ int completeExecs(tabComp* tab, char* token)
                 free(allpaths);  // avoids memory leak
                 return -1;
             }
-            initStr(temp, 0, sizeof(temp));  // resets temp string
+            initialize_string(temp, 0, sizeof(temp));  // resets temp string
         }
         else  // adds current character to the path string
         {
@@ -142,7 +142,7 @@ int completeExecs(tabComp* tab, char* token)
 
 /// @brief this function opens up a directory(opendir) to iterate over via readdir()
 ///        and simultaniously runs a string by string comparison on the returned directories.
-///        Every match gets stored in tabs->matches, direcotirs get a '/' appended, every other
+///        Every match gets stored in tabs->matches, directories get a '/' appended, every other
 ///        file gets a space appended
 /// @param tab
 /// @param token
@@ -173,26 +173,26 @@ int completeArgs(tabComp* tab, char* token, char* path, int isExec)
                 continue;
             }
         }
-        if (strcomp(token, compare->d_name) != -1)
+        if (str_comp(token, compare->d_name) != -1)
         {
             // checks if maximum capacity has been reached and doubles it if so
             if (*i == tab->capac - 1)
             {
-                int cntrl = increaseCapac(&tab->matches, &tab->capac, tab->capac); // doubles capacity
+                int cntrl = increase_capacity(&tab->matches, &tab->capac, tab->capac); // doubles capacity
                 if (cntrl < 0)
                 {
                     return -1;
                 }
             }
             // + 2 for appended / or space and \0
-            int temp = strLen(compare->d_name);
+            int temp = str_len(compare->d_name);
             tab->matches[*i] = malloc(temp + 2);
             if (tab->matches[*i] == NULL)
             {
                 perror("malloc");
                 return -1;
             }
-            strcopy(compare->d_name, tab->matches[*i]);
+            str_copy(compare->d_name, tab->matches[*i]);
 
             // appends slash to folders/directories
             if (compare->d_type == DT_DIR)
@@ -271,14 +271,14 @@ void handleCases(tabComp* tab, char* token)
     }
     else if (tab->matchcount == 1)  // exactly one atch
     {
-        strcopy(tab->matches[0], token);
+        str_copy(tab->matches[0], token);
         tab->tabs = 0;
     }
     else  // multiple matches
     {
         printf("\a");
         fflush(stdout);
-        findPrefix(tab->matches, token, tab->matchcount);
+        find_prefix(tab->matches, token, tab->matchcount);
     }
 }
 
@@ -298,7 +298,7 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
         return 0;
     }
 
-    int count = strLen(command) - 1;  // -1 to avoid overflows when used as index
+    int count = str_len(command) - 1;  // -1 to avoid overflows when used as index
     if (count < 0)
     {
         printf("\a");
@@ -367,13 +367,13 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
         }
         // create a string to store the new pathname in
         // count is the position of the / seperator and temp now of the space infront
-        char* pathname = malloc(strLen(command) - temp);
+        char* pathname = malloc(str_len(command) - temp);
         if (pathname == NULL)
         {
             perror("malloc");
             return -1;
         }
-        strcopySeg(command, pathname, temp + 1, count);  // temp is now a space so + 1 to get first letter of token
+        segment_str_copy(command, pathname, temp + 1, count);  // temp is now a space so + 1 to get first letter of token
         int cntrl = completeArgs(tab, &command[count + 1], pathname, 0);
         free(pathname);
         if (cntrl < 0)

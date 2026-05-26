@@ -85,9 +85,9 @@ int handle_arrows(shell* sh, rawInput* cmd_)
                 // repositioning history Index
                 sh->histpos--;
                 // copying stored instruction into current input 
-                strcopy(find_in_history(sh->histpos)->entry, cmd_->cmd);
+                str_copy(find_in_history(sh->histpos)->entry, cmd_->cmd);
                 // repositioning cursoridx
-                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  
+                cmd_->cursoridx = str_len(cmd_->cmd) + str_len(sh->wdir) + 2;  
                 break;
 
             case 'B':  // arrow down
@@ -100,13 +100,13 @@ int handle_arrows(shell* sh, rawInput* cmd_)
                 // repositioning cursoridx
                 sh->histpos++;
                 // copying stored instruction into current input 
-                strcopy(find_in_history(sh->histpos)->entry, cmd_->cmd);  
+                str_copy(find_in_history(sh->histpos)->entry, cmd_->cmd);  
                 // repositioning cursoridx
-                cmd_->cursoridx = strLen(cmd_->cmd) + strLen(sh->wdir) + 2;  
+                cmd_->cursoridx = str_len(cmd_->cmd) + str_len(sh->wdir) + 2;  
                 break;
             case 'C':
                 // checks if the curosr has met the rightmost edge of the command then increments cursor if not
-                if (cmd_->cursoridx < strLen(cmd_->cmd) + strLen(sh->wdir) + 2)
+                if (cmd_->cursoridx < str_len(cmd_->cmd) + str_len(sh->wdir) + 2)
                 {
                     cmd_->cursoridx++;
                 }
@@ -119,7 +119,7 @@ int handle_arrows(shell* sh, rawInput* cmd_)
                 break;
             case 'D':
                 // checks if the curosr has met the leftmost edge of the command then decrements cursor if not
-                if (cmd_->cursoridx > strLen(sh->wdir) + 2)
+                if (cmd_->cursoridx > str_len(sh->wdir) + 2)
                 {
                     cmd_->cursoridx--;
                 }
@@ -162,7 +162,7 @@ int get_input(shell* sh, rawInput* cmd_)
     tab.tabs = 0;
     tab.matches = NULL;
     int len = 0;                     // variable checks how long the currently typed cmd is
-    int anc = strLen(sh->wdir) + 2;  // varible to memorize the beggining of the user editable part of the cmd line
+    int anc = str_len(sh->wdir) + 2;  // varible to memorize the beggining of the user editable part of the cmd line
     char c = '\0';
     cmd_->cursoridx = anc;            // positions cursor at the first user eligable position
     tcsetattr(0, TCSANOW, &sh->raw);  // enters raw mode
@@ -202,7 +202,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
 
-                len = strLen(cmd_->cmd);      // readjusts str len
+                len = str_len(cmd_->cmd);      // readjusts str len
                 cmd_->cursoridx = len + anc;  // readjusts cursor
                 break;
 
@@ -214,7 +214,7 @@ int get_input(shell* sh, rawInput* cmd_)
                     continue;
                 }
                 // appends current input into history
-                create_and_append_new_hist_entry(cmd_->cmd, strLen(cmd_->cmd));
+                create_and_append_new_hist_entry(cmd_->cmd, str_len(cmd_->cmd));
                 // positions history Index after the newest command
                 sh->histpos = last_entry->entry_ID + 1;
                 cleanupTab(&tab);  // avoid memory leaks
@@ -228,14 +228,14 @@ int get_input(shell* sh, rawInput* cmd_)
                 sh->latest = sh->history.size - 1;     // resets latest
             }
             */
-                return strLen(cmd_->cmd);
+                return str_len(cmd_->cmd);
             case 127:
                 cleanupTab(&tab);  // avoid memory leaks
                 if (cmd_->cursoridx > anc)
                 {
                     len--;
                     cmd_->cursoridx--;
-                    delInStr(cmd_->cmd, cmd_->cursoridx - anc);  // removes item in string
+                    delete_in_string(cmd_->cmd, cmd_->cursoridx - anc);  // removes item in string
 
                     // refreshes the screen
                     printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
@@ -261,7 +261,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 fflush(stdout);
                 reposition_cursor(cmd_->cursoridx);
 
-                len = strLen(cmd_->cmd);
+                len = str_len(cmd_->cmd);
                 cleanupTab(&tab);  // avoid memory leaks
 
                 break;
@@ -283,7 +283,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 // cursor is in the string not at the end
                 if (cmd_->cursoridx - anc != len)
                 {
-                    insertInStr(cmd_->cmd, c, cmd_->cursoridx - anc, strLen(cmd_->cmd));
+                    insert_in_string(cmd_->cmd, c, cmd_->cursoridx - anc, str_len(cmd_->cmd));
                     cmd_->cursoridx++;
                     len++;
                     cmd_->cmd[len] = '\0';

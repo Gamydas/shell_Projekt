@@ -10,12 +10,12 @@ void initTab(tabComp* tab)
 {
     tab->cwd = NULL;
     tab->compDir = NULL;
-    initStr(tab->tempdir, 0, 256);
-    initStr(tab->prefix, 0, 256);
+    initialize_string(tab->tempdir, 0, 256);
+    initialize_string(tab->prefix, 0, 256);
     for (int i = 0; i < 50; i++)
     {
-        initStr(tab->twins[i], 0, sizeof(tab->twins[i]));
-        initStr(tab->buffer[i], 0, sizeof(tab->buffer[i]));
+        initialize_string(tab->twins[i], 0, sizeof(tab->twins[i]));
+        initialize_string(tab->buffer[i], 0, sizeof(tab->buffer[i]));
     }
     for (int i = 0; i < 50; i++)
     {
@@ -31,8 +31,8 @@ void initTab(tabComp* tab)
 
 void tabCases(shell* sh)
 {
-    int length = strLen(sh->cmd);
-    int idx = strLen(sh->compl.parse[sh->compl.args-1]); // gets the index of the to be completed item
+    int length = str_len(sh->cmd);
+    int idx = str_len(sh->compl.parse[sh->compl.args-1]); // gets the index of the to be completed item
     // no match was found
     if (sh->compl.twidx == 0)
     {
@@ -43,8 +43,8 @@ void tabCases(shell* sh)
     // exactly one match was found
     if (sh->compl.twidx == 1)
     {
-        strcopy(sh->compl.twins[0], &sh->cmd[length-idx]);
-        int temp = strLen(sh->compl.twins[0]) + 1;
+        str_copy(sh->compl.twins[0], &sh->cmd[length-idx]);
+        int temp = str_len(sh->compl.twins[0]) + 1;
         sh->cmd[temp] = 32;
         sh->cmd[temp + 1] = '\0';
         return;
@@ -54,8 +54,8 @@ void tabCases(shell* sh)
     {
         printf("\a");
         fflush(stdout);
-        findPrefix(sh->compl.twins, sh->compl.prefix, 256, sh->compl.twidx);
-        strcopy(sh->compl.prefix, &sh->cmd[length-idx]);
+        find_prefix(sh->compl.twins, sh->compl.prefix, 256, sh->compl.twidx);
+        str_copy(sh->compl.prefix, &sh->cmd[length-idx]);
         return;
     }
 }
@@ -103,12 +103,12 @@ void completeArguments(shell* sh)
     while((sh->compl.compDir = readdir(sh->compl.cwd)) != NULL)
     {
         // partial match found
-        if(strcomp(sh->compl.parse[idx], sh->compl.compDir->d_name) == 1) 
+        if(str_comp(sh->compl.parse[idx], sh->compl.compDir->d_name) == 1) 
         {
             // checks if the type of file is compatible with the command and adds it to twins if so
             if(checkCompatibleFileTyping(sh->compl.compDir, sh->binflag) == 0)
             {
-                strcopy(sh->compl.compDir->d_name, sh->compl.twins[sh->compl.twidx]);
+                str_copy(sh->compl.compDir->d_name, sh->compl.twins[sh->compl.twidx]);
                 sh->compl.twidx++;;
             }
         }
@@ -122,7 +122,7 @@ void completeBuiltin(shell* sh)
     // checks if the command was already a full builtin or only a partial
     for (int i = 0; i < sh->binamt; i++)
     {
-        if (strcomp(sh->builtins[i], sh->compl.parse[0]) == 0)
+        if (str_comp(sh->builtins[i], sh->compl.parse[0]) == 0)
         {
             sh->binflag= i;
         }
@@ -142,9 +142,9 @@ void completeBuiltin(shell* sh)
     {
         for (int i = 0; i < sh->binamt; i++)
         {
-            if (strcomp(sh->compl.parse[0], sh->builtins[i]) == 1)
+            if (str_comp(sh->compl.parse[0], sh->builtins[i]) == 1)
             {
-                strcopy(sh->builtins[i], sh->compl.twins[sh->compl.twidx]);
+                str_copy(sh->builtins[i], sh->compl.twins[sh->compl.twidx]);
                 sh->binflag = i;
                 sh->compl.twidx++;
             }
@@ -163,11 +163,11 @@ void tabComplete(shell* sh)
 {
     initTab(&sh->compl);
     sh->compl.cwd = opendir(sh->wdir);  // opens the directory stream of the current working directory
-    sh->compl.args = parseStr(sh->cmd, sh->compl.parse);
+    sh->compl.args = parse_string(sh->cmd, sh->compl.parse);
     int args = sh->compl.args;
     if (args > 0)
     {
-        int curlen = strLen(sh->compl.parse[args - 1]);
+        int curlen = str_len(sh->compl.parse[args - 1]);
 
         // only a command(builtin or executable) has been (partially) typed
         if (args == 1)

@@ -33,7 +33,7 @@ int addItem(list* list_, char* text)
     }
     
     list_->list = temp;
-    strcopy(text, list_->list[list_->size - 1]); // size -1 so the entry at index [size] will always be unused unless wanted otherwise
+    str_copy(text, list_->list[list_->size - 1]); // size -1 so the entry at index [size] will always be unused unless wanted otherwise
     
     return 0;
 }

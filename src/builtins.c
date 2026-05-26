@@ -33,7 +33,7 @@ void cd(char *dir)
             return;
         }
     }
-    if (strcomp(dir, "~") == 0)
+    if (str_comp(dir, "~") == 0)
     {
         dir = getenv("HOME");
         if (dir == NULL)
@@ -82,7 +82,7 @@ void type(char *text)
 {
     if (text != NULL)
     {
-        if (strcomp(text, "cd") == 0 || strcomp(text, "pwd") == 0 || strcomp(text, "echo") == 0 || strcomp(text, "type") == 0)
+        if (str_comp(text, "cd") == 0 || str_comp(text, "pwd") == 0 || str_comp(text, "echo") == 0 || str_comp(text, "type") == 0)
         {
             printf("%s is a shell buildtin\n", text);
         }

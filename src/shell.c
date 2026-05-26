@@ -10,17 +10,17 @@ void init_shell(shell* sh)
     sh->binamt = 4;
     
     // str and buffer initializations
-    initStr(sh->wdir, 0, sizeof(sh->wdir));
+    initialize_string(sh->wdir, 0, sizeof(sh->wdir));
     for (int i = 0; i < 50; i++)
     {
-        initStr(sh->builtins[i],0, sizeof(sh->builtins[0]));
+        initialize_string(sh->builtins[i],0, sizeof(sh->builtins[0]));
     }
 
     // entering all currently existing builtins into the array
-    strcopy("exit", sh->builtins[0]);
-    strcopy("cd", sh->builtins[1]);
-    strcopy("type", sh->builtins[2]);
-    strcopy("pwd", sh->builtins[3]);
+    str_copy("exit", sh->builtins[0]);
+    str_copy("cd", sh->builtins[1]);
+    str_copy("type", sh->builtins[2]);
+    str_copy("pwd", sh->builtins[3]);
     
     // termios initialization
     tcgetattr(0, &sh->canon);

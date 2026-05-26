@@ -15,7 +15,7 @@
 /// @param direction what type of redirect is called
 /// @param target    target of redirection
 /// @return          returns 0 if redirection was succesful, -1 otherwise
-int handleRedirections(redirect *dir)
+int handle_redirections(redirect *dir)
 {
     ERR error = NO_ERROR;
     int *stream = &dir->stream;
@@ -128,7 +128,7 @@ int handleRedirections(redirect *dir)
 /// @param token given token, if its size is greater than 3 it is an automatic error
 /// @param size length of token
 /// @return 0 if succesful, -1 if an error occured
-int switchDirect(REDIR *direction, char *token, int size)
+int switch_directions(REDIR *direction, char *token, int size)
 {
     ERR error = NO_ERROR;
     if (size > 3)
@@ -179,15 +179,15 @@ int switchDirect(REDIR *direction, char *token, int size)
     return -1;  // can never be reached, but makes the gcc happy :)
 }
 
-int setUpRedir(redirect *redir, char *target, REDIR *type)
+int setup_redirections(redirect *redir, char *target, REDIR *type)
 {
     redir->direction = *type;
-    redir->target = calloc(1, strLen(target) + 1);  // +1 for \0
+    redir->target = calloc(1, str_len(target) + 1);  // +1 for \0
     if (redir->target == NULL)
     {
         perror("malloc");
         return -1;
     }
-    strcopy(target, redir->target);
+    str_copy(target, redir->target);
     return 0;
 }

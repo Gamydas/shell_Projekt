@@ -24,7 +24,7 @@ int create_and_append_new_hist_entry(char *new_entry, uint16_t entry_size)
         return -1;
     }
 
-    int cntrl = allocStrCopy(new_entry, &new->entry, entry_size);
+    int cntrl = alloc_str_copy(new_entry, &new->entry, entry_size);
     if (cntrl < 0)
     {
         free(new);
@@ -160,8 +160,8 @@ int read_history_from_file()
     while(fgets(line, 128, stream) != NULL)
     {
         // removing potential white spaces from the end of the line that cause parsing errors
-        cutFromEnd(line, '\n', strLen(line));
-        cutFromEnd(line, '\r', strLen(line));
+        cut_character_from_end(line, '\n', str_len(line));
+        cut_character_from_end(line, '\r', str_len(line));
         // this might cause problems cause of 128/lengthchecks
         int cntrl = create_and_append_new_hist_entry(line, 128);
         if (cntrl < 0)

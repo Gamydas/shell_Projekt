@@ -22,12 +22,12 @@ void add2Buf(charCircBuff *bufr, char *text)
 {
     if (bufr->head == &bufr->buf[49]) // checks if head is at the end of the reserved buffer memory  (hardcoded size, might change this later)
     {
-        strcopy(text, *bufr->head);
+        str_copy(text, *bufr->head);
         bufr->head = &bufr->buf[0]; // wraps around the end
     }
     else
     {
-        strcopy(text, *bufr->head);
+        str_copy(text, *bufr->head);
         bufr->head++;
     }
 }
@@ -39,11 +39,11 @@ void tempadd2Buf(charCircBuff *bufr, char *text)
 {
     if (bufr->head == &bufr->buf[49]) // checks if head is at the end of the reserved buffer memory  (hardcoded size, might change this later)
     {
-        strcopy(text, *bufr->head);
+        str_copy(text, *bufr->head);
     }
     else
     {
-        strcopy(text, *bufr->head);
+        str_copy(text, *bufr->head);
     }
 }
 
@@ -66,7 +66,7 @@ void resetLatest(charCircBuff *bufr)
 /// @param dest
 void fetchLatest(charCircBuff *bufr, char *dest)
 {
-    strcopy(*bufr->latest, dest);
+    str_copy(*bufr->latest, dest);
     if (bufr->latest == &bufr->buf[0]) // checks for a negative buffer overflow
     {
         bufr->latest = &bufr->buf[49]; // wraps around buffer
@@ -86,15 +86,15 @@ void revFetchLatest(charCircBuff *bufr, char *dest)
         if (bufr->latest == &bufr->buf[49]) // checks for a positive buffer overflow
         {
             bufr->latest = &bufr->buf[0]; // wraps around buffer
-            strcopy(*bufr->latest, dest);
+            str_copy(*bufr->latest, dest);
         } else if(bufr->latest == bufr->head)
         {
-            strcopy(*bufr->latest, dest);
+            str_copy(*bufr->latest, dest);
         }
         else
         {
             bufr->latest++;
-            strcopy(*bufr->latest, dest);
+            str_copy(*bufr->latest, dest);
         }
     
 }

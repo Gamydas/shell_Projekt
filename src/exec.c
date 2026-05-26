@@ -103,7 +103,7 @@ int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int
 
         for (int i = 0; i < instructs->rdrctns; i++)
         {
-            cntrl = handleRedirections(&instructs->redir[i]);
+            cntrl = handle_redirections(&instructs->redir[i]);
             if (cntrl < 0)
             {
                 close(out_fd);
@@ -135,10 +135,10 @@ int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int
     // checks for built ins
     for (int i = 0; i < binamt; i++)
     {
-        if (strcomp(builtins[i].name, instructs->args[0]) == 0)
+        if (str_comp(builtins[i].name, instructs->args[0]) == 0)
         {
             // only for the parent, i.e the actual shell process
-            if (strcomp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
+            if (str_comp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
             {
                 builtins[i].bin(instructs->args[1]);  // indicates caller that exit has been called
             }

@@ -107,7 +107,7 @@ static shHist *setup_first_entry(const char *text, uint16_t id)
 {
     shHist *e = malloc(sizeof(shHist));
     if (!e) return NULL;
-    size_t len = strlen(text);
+    size_t len = str_len(text);
     e->entry = malloc(len + 1);
     if (!e->entry) { free(e); return NULL; }
     memcpy(e->entry, text, len + 1);
@@ -291,7 +291,7 @@ static void test_append_preserves_full_string(void)
 {
     const char *cmd = "grep -rn \"hello world\" /path/to/src --include='*.c'";
     setup_first_entry("init", 1);
-    create_and_append_new_hist_entry((char *)cmd, (uint16_t)strlen(cmd));
+    create_and_append_new_hist_entry((char *)cmd, (uint16_t)str_len(cmd));
     ASSERT_STR_EQ(last_entry->entry, cmd, "complex command string preserved exactly");
 }
 
@@ -560,7 +560,7 @@ static void test_print_empty_history_produces_no_output(void)
     start_stdout_capture();
     print_history();
     char *out = end_stdout_capture();
-    ASSERT_EQ((int)strlen(out), 0, "print_history on empty list produces no output");
+    ASSERT_EQ((int)str_len(out), 0, "print_history on empty list produces no output");
 }
 
 static void test_print_single_entry_contains_id(void)
@@ -650,7 +650,7 @@ static void test_print_all_ids_present(void)
 static void test_print_preserves_special_characters(void)
 {
     const char *cmd = "grep -rn 'hello world' ./src";
-    setup_first_entry((char *)cmd, (uint16_t)strlen(cmd));
+    setup_first_entry((char *)cmd, (uint16_t)str_len(cmd));
 
     start_stdout_capture();
     print_history();

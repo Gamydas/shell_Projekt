@@ -155,13 +155,13 @@ int handle_seperators(Instructions *instruct, char *token, char *text, int *idx,
         *type = END_NEXT;                                      // indicates that next token is target
         // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
         // idx is already 0 so no need to reset it here
-        initStr(token, 0, strLen(token));  // clears token to avoid wrong reads
+        initialize_string(token, 0, str_len(token));  // clears token to avoid wrong reads
         return 0;                          // need to return so the redir operator doesnt get tokenized
     }
     else if (*type == END_NEXT)
     {
         *type = instruct->redir[instruct->rdrctns].direction;  // fetches current redirection type
-        cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, type);
+        cntrl = setup_redirections(&instruct->redir[instruct->rdrctns], token, type);
         if (cntrl < 0)
         {
             return -1;  // error occured, message handled by exited funct, cleanup handled by caller
@@ -169,7 +169,7 @@ int handle_seperators(Instructions *instruct, char *token, char *text, int *idx,
         instruct->rdrctns++;
         // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
         // idx is already 0 so no need to reset it here
-        initStr(token, 0, strLen(token));  // clears token to avoid wrong reads
+        initialize_string(token, 0, str_len(token));  // clears token to avoid wrong reads
         *type = NO_REDIR;                  // resets redirection type for next redir
         return 0;
     }
@@ -177,14 +177,14 @@ int handle_seperators(Instructions *instruct, char *token, char *text, int *idx,
     // checks if new memory has to be allocated
     if (instruct->parseamt == instruct->capac - 1)  // always leave one space for sentinel
     {
-        cntrl = increaseCapac(&instruct->args, &instruct->capac, instruct->capac);  // doubles capac
+        cntrl = increase_capacity(&instruct->args, &instruct->capac, instruct->capac);  // doubles capac
         if (cntrl < 0)
         {
             return -1;
         }
     }
     // adds the finished token to the arguments array
-    cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt], strLen(token));
+    cntrl = alloc_str_copy(token, &instruct->args[instruct->parseamt], str_len(token));
     if (cntrl < 0)
     {
         return -1;
@@ -217,7 +217,7 @@ int append_to_token(Instructions *instruct, char *token, char *text, int *idx, i
         if (type == END_NEXT)
         {
             type = instruct->redir[instruct->rdrctns].direction;  // fetches the current redirection type
-            cntrl = setUpRedir(&instruct->redir[instruct->rdrctns], token, &type);
+            cntrl = setup_redirections(&instruct->redir[instruct->rdrctns], token, &type);
             if (cntrl < 0)
             {
                 return -1;  // same error handling as everywhere else in this module
@@ -230,7 +230,7 @@ int append_to_token(Instructions *instruct, char *token, char *text, int *idx, i
         // checks if more memory needs to be allocated
         if (instruct->parseamt == instruct->capac - 1)
         {
-            cntrl = increaseCapac(&instruct->args, &instruct->capac, 1);  // only needs 1 more slot for the NULL sentinel
+            cntrl = increase_capacity(&instruct->args, &instruct->capac, 1);  // only needs 1 more slot for the NULL sentinel
             if (cntrl < 0)
             {
                 return -1;  // same error handling as everywhere else in this module
@@ -238,7 +238,7 @@ int append_to_token(Instructions *instruct, char *token, char *text, int *idx, i
         }
         // enters token into the parsed arrays
         // transfers the token into the parsed arr of the cmd struct
-        cntrl = allocStrCopy(token, &instruct->args[instruct->parseamt], strLen(token));
+        cntrl = alloc_str_copy(token, &instruct->args[instruct->parseamt], str_len(token));
         if (cntrl < 0)
         {
             return -1;  // malloc error
@@ -385,7 +385,7 @@ int parse_input(InstructList *list, char *text)
                 }
                 break;
             }
-            if (switchDirect(&dir, token, idx) == 0)
+            if (switch_directions(&dir, token, idx) == 0)
             {
                 token[idx] = text[pos];
                 pos++;
@@ -394,7 +394,7 @@ int parse_input(InstructList *list, char *text)
             else
             {
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                return -1;                     // syntax error, handled by switchDirect
+                return -1;                     // syntax error, handled by switch_directions
             }
             break;
 

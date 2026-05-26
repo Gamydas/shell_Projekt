@@ -45,7 +45,7 @@ int setup_pipes(Instructions *instruct, int size)
             // handles all redirection calls in the pipe segments and handles erros if they happen
             for (int j = 0; j < instruct[i].rdrctns; j++)
             {
-                int cntrl = handleRedirections(&instruct[i].redir[j]); 
+                int cntrl = handle_redirections(&instruct[i].redir[j]); 
                 if (cntrl < 0)
                 {
                     close_pipes(pipes, size);
