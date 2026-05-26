@@ -1,6 +1,6 @@
 #include <dirent.h>
-#ifndef TABCOMPLETE_H
-#define TABCOMPLETE_H
+#ifndef tab_completion_H
+#define tab_completion_H
 typedef struct 
 {
     DIR* cwd;
@@ -19,8 +19,8 @@ typedef struct
 
 typedef struct shell shell;
 
-void initTab(tabComp* tab);
-void tabComplete(shell* sh);
+void initialize_tab_struct(tabComp* tab);
+void tab_completion(shell* sh);
 void completeBuiltin(shell* sh); 
 void completeArguments(shell *sh);
 

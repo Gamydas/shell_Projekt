@@ -190,10 +190,10 @@ int get_input(shell* sh, rawInput* cmd_)
             case '\t':  // Tabulator to autocomplete the directory if possible
                 if (tab.tabs == 0)
                 {
-                    initTab(&tab);
+                    initialize_tab_struct(&tab);
                 }
                 tab.tabs++;
-                int cntrl = tabComplete(&tab, sh->builtins, sh->binamt, cmd_->cmd, sh->wdir);
+                int cntrl = tab_completion(&tab, sh->builtins, sh->binamt, cmd_->cmd, sh->wdir);
                 if (cntrl < 0)
                 {
                     continue;
@@ -217,7 +217,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 create_and_append_new_hist_entry(cmd_->cmd, str_len(cmd_->cmd));
                 // positions history Index after the newest command
                 sh->histpos = last_entry->entry_ID + 1;
-                cleanupTab(&tab);  // avoid memory leaks
+                cleanup_tab_struct(&tab);  // avoid memory leaks
                 printf("\r\n");
                 fflush(stdout);
                 tcsetattr(0, TCSANOW, &sh->canon);  // exits raw mode
@@ -230,7 +230,7 @@ int get_input(shell* sh, rawInput* cmd_)
             */
                 return str_len(cmd_->cmd);
             case 127:
-                cleanupTab(&tab);  // avoid memory leaks
+                cleanup_tab_struct(&tab);  // avoid memory leaks
                 if (cmd_->cursoridx > anc)
                 {
                     len--;
@@ -262,7 +262,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 reposition_cursor(cmd_->cursoridx);
 
                 len = str_len(cmd_->cmd);
-                cleanupTab(&tab);  // avoid memory leaks
+                cleanup_tab_struct(&tab);  // avoid memory leaks
 
                 break;
             default:
@@ -301,7 +301,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 fflush(stdout);
                 reposition_cursor(cmd_->cursoridx);
 
-                cleanupTab(&tab);  // avoid memory leaks
+                cleanup_tab_struct(&tab);  // avoid memory leaks
                 break;
         }
     }

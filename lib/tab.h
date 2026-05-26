@@ -6,18 +6,18 @@ typedef struct tabComp
 {
     int tabs; // amount of tabs used
     int matchcount; // amount of matches found
-    // structure to store all matches in, this needs to be large for completeExecs
+    // structure to store all matches in, this needs to be large for complete_executables
     char** matches;
     int capac; // capacity of outer dimension, i.e the actual array
 } tabComp;
 
-int initTab(tabComp* tab);
-int tabComplete(tabComp *tab, char (*builtins)[10], int binamt, char *command, char *path);
-int completeBuiltins(tabComp *tab, char* token, char (*builtins)[10], int binamt);
-int completeArgs(tabComp *tab, char *token, char *path, int isExec);
-int completeExecs(tabComp *tab, char *token);
-void handleCases(tabComp *tab, char* token);
-void checkTabAmount(tabComp *tab);
-void cleanupTab(tabComp *tab);
+int initialize_tab_struct(tabComp* tab);
+int tab_completion(tabComp *tab, char (*builtins)[10], int binamt, char *command, char *path);
+int complete_builtins(tabComp *tab, char* token, char (*builtins)[10], int binamt);
+int complete_arguments(tabComp *tab, char *token, char *path, int isExec);
+int complete_executables(tabComp *tab, char *token);
+void handle_tab_cases(tabComp *tab, char* token);
+void check_tab_amount(tabComp *tab);
+void cleanup_tab_struct(tabComp *tab);
 
 #endif

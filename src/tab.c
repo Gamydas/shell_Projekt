@@ -10,7 +10,7 @@
 /// @brief initializes a tabComp structure
 /// @param tab
 /// @return returns 0 on success, -1 on failure
-int initTab(tabComp* tab)
+int initialize_tab_struct(tabComp* tab)
 {
     tab->matchcount = 0;
     tab->tabs = 0;
@@ -28,7 +28,7 @@ int initTab(tabComp* tab)
 
 /// @brief cleans up a tab struct and resets all its values
 /// @param tab 
-void cleanupTab(tabComp* tab)
+void cleanup_tab_struct(tabComp* tab)
 {
     if (tab->matches != NULL)
     {
@@ -55,7 +55,7 @@ void cleanupTab(tabComp* tab)
 /// @param builtins array of builtins for shell
 /// @param binamt amount of builtins shell currently has
 /// @return 0 if everythin was succesfull, -1 if error occured
-int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt)
+int complete_builtins(tabComp* tab, char* token, char (*builtins)[10], int binamt)
 {
     // iterates over builtins array and saves matches to tab->matches
     for (int i = 0; i < binamt; i++)  
@@ -86,7 +86,7 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
         }
     }
     return 0;
-    //handleCases(tab, token);
+    //handle_tab_cases(tab, token);
 }
 
 
@@ -96,7 +96,7 @@ int completeBuiltins(tabComp* tab, char* token, char (*builtins)[10], int binamt
 /// @param tab
 /// @param token
 /// @return 0 if everythin was succesfull, -1 if error occured
-int completeExecs(tabComp* tab, char* token)
+int complete_executables(tabComp* tab, char* token)
 {
     int pathlen = str_len(getenv("PATH"));
     char* allpaths = malloc(pathlen + 1);  // allocates memory required (+1 for 0-byte)
@@ -116,7 +116,7 @@ int completeExecs(tabComp* tab, char* token)
         {
             temp[count] = '\0';
             count = 0;
-            int cntrl = completeArgs(tab, token, temp, 1);
+            int cntrl = complete_arguments(tab, token, temp, 1);
             if (cntrl < 0)
             {
                 free(allpaths);  // avoids memory leak
@@ -131,7 +131,7 @@ int completeExecs(tabComp* tab, char* token)
         }
     }
     temp[count] = '\0';  // final nullterminator
-    int cntrl = completeArgs(tab, token, temp, 1); 
+    int cntrl = complete_arguments(tab, token, temp, 1); 
     free(allpaths);
     if (cntrl < 0)
     {
@@ -147,9 +147,9 @@ int completeExecs(tabComp* tab, char* token)
 /// @param tab
 /// @param token
 /// @param path
-/// @param isExec parameter to check if this function was called by completeExecs, needs to be given 1 if so
+/// @param isExec parameter to check if this function was called by complete_executables, needs to be given 1 if so
 /// @return 0 if everythin was succesfull, -1 if error occured
-int completeArgs(tabComp* tab, char* token, char* path, int isExec)
+int complete_arguments(tabComp* tab, char* token, char* path, int isExec)
 {
     DIR* current = opendir(path);
     // not a directory, silent return is intended
@@ -211,7 +211,7 @@ int completeArgs(tabComp* tab, char* token, char* path, int isExec)
          looks for partial or complete matches, which are then
          put into the matches array, then increments matchcount */
 
-    //handleCases(tab, token);
+    //handle_tab_cases(tab, token);
 
     closedir(current);
     return 0;
@@ -220,7 +220,7 @@ int completeArgs(tabComp* tab, char* token, char* path, int isExec)
 /// @brief this function, when called, checks the tab->tabs counter, and handles the
 ///        the appropriate cases
 /// @param tab
-void checkTabAmount(tabComp* tab)
+void check_tab_amount(tabComp* tab)
 {
     // there is only one or no match, so ring bell and do nothing
     if (tab->matchcount < 2)
@@ -258,10 +258,10 @@ void checkTabAmount(tabComp* tab)
     }
 }
 
-/// @brief function to handle the 3 possible cases of tabComplete
+/// @brief function to handle the 3 possible cases of tab_completion
 /// @param tab
 /// @param token
-void handleCases(tabComp* tab, char* token)
+void handle_tab_cases(tabComp* tab, char* token)
 {
     // no match found
     if (tab->matchcount == 0)
@@ -290,11 +290,11 @@ void handleCases(tabComp* tab, char* token)
 /// @param command given command string, yet untokinzed
 /// @param path 
 /// @return 0 if success, -1 if an error occured
-int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, char* path)
+int tab_completion(tabComp* tab, char (*builtins)[10], int binamt, char* command, char* path)
 {
     if (tab->tabs > 1)
     {
-        checkTabAmount(tab);
+        check_tab_amount(tab);
         return 0;
     }
 
@@ -319,7 +319,7 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
         {
             count++;
         }  // clears out every seperator at the begging of the command
-        int cntrl = completeBuiltins(tab, &command[count], builtins, binamt);
+        int cntrl = complete_builtins(tab, &command[count], builtins, binamt);
         if (cntrl < 0)
         {
             return -1;
@@ -327,17 +327,17 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
         /*
         if (tab->matchcount > 0)
         {
-            handleCases(tab, &command[count]);
+            handle_tab_cases(tab, &command[count]);
             return 0;
         }*/
         else
         {
-            cntrl = completeExecs(tab, &command[count]);
+            cntrl = complete_executables(tab, &command[count]);
             if (cntrl < 0)
             {
                 return -1;
             }
-            handleCases(tab, &command[count]);
+            handle_tab_cases(tab, &command[count]);
             return 0;
         }
     }
@@ -345,7 +345,7 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
     // entirely new token
     if (command[count] == 32)
     {
-        int cntrl = completeArgs(tab, &command[count + 1], path, 0);
+        int cntrl = complete_arguments(tab, &command[count + 1], path, 0);
         if (cntrl < 0)
         {
             return -1;
@@ -374,13 +374,13 @@ int tabComplete(tabComp* tab, char (*builtins)[10], int binamt, char* command, c
             return -1;
         }
         segment_str_copy(command, pathname, temp + 1, count);  // temp is now a space so + 1 to get first letter of token
-        int cntrl = completeArgs(tab, &command[count + 1], pathname, 0);
+        int cntrl = complete_arguments(tab, &command[count + 1], pathname, 0);
         free(pathname);
         if (cntrl < 0)
         {
             return -1;
         }
     }
-    handleCases(tab, &command[count + 1]);
+    handle_tab_cases(tab, &command[count + 1]);
     return 0;
 }

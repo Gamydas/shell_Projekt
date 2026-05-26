@@ -1,4 +1,4 @@
-#include "tabComplete.h"
+#include "tab_completion.h"
 
 #include <stdio.h>
 
@@ -6,7 +6,7 @@
 #include "str.h"
 #include "buildtins.h"
 
-void initTab(tabComp* tab)
+void initialize_tab_struct(tabComp* tab)
 {
     tab->cwd = NULL;
     tab->compDir = NULL;
@@ -159,9 +159,9 @@ void completeBuiltin(shell* sh)
 /// @brief support function which gets passed a shell struc and looks through present directories and looks for either complete or partial matches,
 ///        which will then be saved to the twins array(later the entire array will be printed out on a double press of TAB)
 /// @param sh
-void tabComplete(shell* sh)
+void tab_completion(shell* sh)
 {
-    initTab(&sh->compl);
+    initialize_tab_struct(&sh->compl);
     sh->compl.cwd = opendir(sh->wdir);  // opens the directory stream of the current working directory
     sh->compl.args = parse_string(sh->cmd, sh->compl.parse);
     int args = sh->compl.args;
