@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "history.h"
 #include "str.h"
 #include "../lib/err.h"
@@ -31,17 +32,19 @@ int create_and_append_new_hist_entry(char *new_entry, uint16_t entry_size)
     }
     new->next = NULL;
     new->entry_size = entry_size;
-    new->entry_ID = last_entry->entry_ID + 1;
+    
 
     // list is empty
     if (last_entry == NULL)
     {
-        new = first_entry;
-        new = last_entry;
+        first_entry = new;
+        last_entry = new;
+        new->entry_ID = 1;
         new->prev = NULL;
         return 0;
     } 
     // list is not empty
+    new->entry_ID = last_entry->entry_ID + 1;
     last_entry->next = new;
     new->prev = last_entry;
     last_entry = new;
@@ -120,4 +123,94 @@ void free_history_entry(shHist *entry)
 {
     if (entry != NULL) free(entry->entry);
     free(entry);
+}
+
+// todo
+int read_history_from_file()
+{
+    char* home = getenv("HOME");
+    chdir(home);
+    FILE *stream = NULL;
+
+    stream = fopen(".myshellhistory", "r");
+    if (stream == NULL)
+    {
+        perror("fopen");
+        return -1;
+    }
+
+    if (first_entry != NULL)
+    {
+        clear_shell_history();
+    }
+
+    char *line = malloc(128);
+    while(fgets(line, 128, stream) != NULL)
+    {
+        // this might cause problems cause of 128/lengthchecks
+        int cntrl = create_and_append_new_hist_entry(line, 128);
+        if (cntrl < 0)
+        {
+            printError(INITIALIZATION_ERROR,"create history entry");
+            return -1;
+        }
+        // might need to remove \r\n
+    } 
+    fclose(stream);
+}
+
+/// @brief changes directory to home and writes the entire history to .myshellhistory
+/// @return 0 if success, -1 if failure
+int write_history_to_file()
+{
+    char* home = getenv("HOME");
+    chdir(home);
+    FILE *stream = NULL;
+
+    stream = fopen(".myshellhistory", "w");
+    if (stream == NULL)
+    {
+        perror("fopen");
+        return -1;
+    }
+    // iterates over entire history list end
+    while (first_entry != NULL)
+    {
+        // prints history entry
+        fprintf(stream, first_entry->entry);
+        // linebreak
+        fputc('\n', stream);
+        first_entry = first_entry->next;
+    }
+    // closing fd/stream
+    fclose(stream);   
+}
+
+/// @brief prints the entire history of the shell
+void print_history()
+{
+    if(first_entry == NULL) return;
+
+    shHist *temp = first_entry;
+    while(temp != NULL)
+    {
+        printf("%d  %s\n", temp->entry_ID, temp->entry);
+        temp = temp->next;
+    }
+}
+
+/// @brief clears the entire shells history and frees all allocated memeory
+void clear_shell_history()
+{
+    shHist *temp = NULL;
+    if (first_entry != NULL)    temp = first_entry->next;
+    while (temp!= NULL)
+    {
+        free_history_entry(first_entry);
+        first_entry = temp;
+        temp = temp->next;
+    }
+    free_history_entry(first_entry); 
+    first_entry = NULL;
+    last_entry = NULL;
 }
