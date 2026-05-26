@@ -228,3 +228,22 @@ int allocStrCopy(char* origin, char** dest, int orig_size)
     strcopy(origin, *dest);
     return 0;
 }
+
+
+/// @brief checks if laster character of given a given string
+///        with a size of atleast 1 or more equals the given
+///        character and removes it if so. Does nothing if char
+///        is not the last character of string or if len < 1
+/// @param string string that the char is to be removed from
+/// @param c      char that is to be removed
+/// @param string_size    length of string (without nullterm)
+void cutFromEnd(char *string, char c, int string_size)
+{
+    // to avoid over/underflows
+    if (string_size < 1) return;
+
+    if (*(string + string_size - 1) == c)
+    {
+        *(string + string_size - 1) = '\0';
+    }
+}

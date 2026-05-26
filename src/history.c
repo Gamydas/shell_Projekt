@@ -129,6 +129,7 @@ void free_history_entry(shHist *entry)
 /// @return 0 on success, -1 on failure
 int read_history_from_file()
 {
+    // fetches path to home directory 
     char *home = getenv("HOME");
     if (home == NULL)
     {
@@ -136,6 +137,7 @@ int read_history_from_file()
         return -1;
     }
 
+    // creates formatstring with total path to home directorys myshell_hist file
     char path[4096];
     snprintf(path, sizeof(path), "%s/.myshell_history", home);
 
@@ -153,9 +155,13 @@ int read_history_from_file()
         clear_shell_history();
     }
 
+    // size of line has to be increased eventually, this is just for testing
     char *line = malloc(128);
     while(fgets(line, 128, stream) != NULL)
     {
+        // removing potential white spaces from the end of the line that cause parsing errors
+        cutFromEnd(line, '\n', strLen(line));
+        cutFromEnd(line, '\r', strLen(line));
         // this might cause problems cause of 128/lengthchecks
         int cntrl = create_and_append_new_hist_entry(line, 128);
         if (cntrl < 0)
