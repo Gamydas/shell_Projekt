@@ -3,6 +3,6 @@
 #include "parser.h"
 #include "builtins.h"
 
-int executeInstructs(InstructList* list, Builtin *builtins, int binamt);
-int executeCommand(Instructions *instruts, Builtin *builtins, int binamt, int ID);
+int setup_command_execution(InstructList* list, Builtin *builtins, int binamt);
+int execute_commands(Instructions *instruts, Builtin *builtins, int binamt, int ID);
 #endif

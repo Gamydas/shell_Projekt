@@ -17,7 +17,7 @@
 /// @param list
 /// @param builtins
 /// @param binamt
-int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
+int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
 {
     int pipecalls = 0;
     int ID = PARENT_PROCCESS;
@@ -42,7 +42,7 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
             if (ID != PARENT_PROCCESS)  // to avoid executing commands twice
             {
                 // executes commands in the children at their approricate position i.E instructs[begin + ID]
-                cntrl = executeCommand(&list->instructs[begin + ID], builtins, binamt, ID);
+                cntrl = execute_commands(&list->instructs[begin + ID], builtins, binamt, ID);
                 // execCommand terminates the children after execution, no need to do that here
                 if (cntrl < 0)
                 {
@@ -60,7 +60,7 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
         }
         else
         {
-            cntrl = executeCommand(&list->instructs[i], builtins, binamt, ID);
+            cntrl = execute_commands(&list->instructs[i], builtins, binamt, ID);
             if (cntrl < 0)
             {
                 return -1;  // caller handles cleanup
@@ -85,7 +85,7 @@ int executeInstructs(InstructList *list, Builtin *builtins, int binamt)
 /// @param binamt
 /// @param ID
 /// @return 0 if success, -1 if error, 1 if exit is called
-int executeCommand(Instructions *instructs, Builtin *builtins, int binamt, int ID)
+int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int ID)
 {
     // declerations for parent
     int out_fd = 0;

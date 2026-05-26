@@ -88,9 +88,9 @@ int main()
             continue;
         }
 
-        control = executeInstructs(&instructions, myShell.bins, myShell.binamt);
+        control = setup_command_execution(&instructions, myShell.bins, myShell.binamt);
         cleanup_instruct_list(&instructions);
-        // this should never be reached since exit is handled by executeInstructs
+        // this should never be reached since exit is handled by setup_command_execution
         if (control == 1)
         {
             return 0; 
