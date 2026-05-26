@@ -146,6 +146,8 @@ int read_history_from_file()
         return -1;
     }
 
+    // clears current history incase its not 0 to avoid colissions or
+    // duplicate entries
     if (first_entry != NULL)
     {
         clear_shell_history();
@@ -167,12 +169,12 @@ int read_history_from_file()
     return 0;
 }
 
-/// @brief writes the entire history to .myshellhistory, which will
+/// @brief writes the entire history to .myshell_history, which will
 ///        be located in your home directory
 /// @return 0 if success, -1 if failure
 int write_history_to_file()
 {
-    
+
     char *home = getenv("HOME");
     if (home == NULL)
     {
@@ -182,7 +184,7 @@ int write_history_to_file()
 
     // creating aboslute path to home directory
     char path[4096];
-    snprintf(path, sizeof(path), "%s/.myshellhistory", home);
+    snprintf(path, sizeof(path), "%s/.myshell_history", home);
 
     FILE *stream = fopen(path, "w");
     if (stream == NULL)
@@ -191,6 +193,8 @@ int write_history_to_file()
         return -1;
     }
 
+    // iterates over the entire history entry by entry
+    // writes it exactly into the destination file(.myshell_history)
     shHist *temp = first_entry;
     while (temp != NULL)
     {

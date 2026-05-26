@@ -10,7 +10,10 @@
 #include "parser.h"
 #include "../lib/err.h"
 #include "exec.h"
+#include "history.h"
 
+extern shHist *first_entry;
+extern shHist *last_entry;
 int main()
 {
     ERR error = NO_ERROR;
@@ -18,6 +21,9 @@ int main()
     rawInput userInput;
     InstructList instructions;
     init_shell(&myShell);
+    read_history_from_file();
+    // FOR TESTING
+    myShell.histpos = last_entry->entry_ID;
     // initialize functiontable
     Builtin builtins[] = 
     {
