@@ -1,5 +1,6 @@
 #ifndef ESCAPESEQUENZEN_H
    #define ESCAPESEQUENZEN_H ESCAPESEQUENZEN_H
+   #include <stdio.h>
 
    #define POSITION(Ze, Sp)     printf("\033[%d;%dH",Ze,Sp)
    #define HOME                 printf("\033[H")
