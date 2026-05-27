@@ -3,7 +3,8 @@ This project does not contain AI generated code except for unit tests. Unit test
 Besides this AI has only been used for: 
 - (self-) educational purposes(for example certain design concepts or best practices) 
 - for research on project relevant topics 
-- in some cases for debugging when I could not figure something out for a while. 
+- in some cases for debugging when I could not figure something out for a while.
+
 AI is a tool not something to replace real work with. 
 
 
