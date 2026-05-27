@@ -15,4 +15,5 @@ void cd(char* dir);
 void pwd(char* flags);
 void type(char* text);
 void echo(char* text);
+void history(char *text);
 #endif

@@ -96,3 +96,23 @@ void type(char *text)
         fprintf(stderr, " : not found\n");
     }
 }
+
+/// @brief builtin to display the command history and manipulate it with flags
+///        currently implemented flags: -c  -  clears the entire history file
+///                                     -w  -  writes the entire shell history to the history file
+/// @param text 
+void history(char *text)
+{
+    if (text == NULL)
+    {
+        print_history();
+    }
+    // clear flag
+    if (str_comp(text, "-c") == 0)
+    {
+        clear_shell_history();
+    } else if (str_comp(text, "-w"))
+    {
+        write_history_to_file();
+    }
+}

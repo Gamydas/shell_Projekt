@@ -30,6 +30,7 @@ int main()
         {"cd", cd},
         {"type", type},
         {"pwd", pwd},
+        {"history", history},
         {NULL, NULL}
     };
     // assign functiontable

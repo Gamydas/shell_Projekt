@@ -7,7 +7,7 @@ void init_shell(shell* sh)
 {
     // integer intitializations
     sh->histpos = 0;
-    sh->binamt = 4;
+    sh->binamt = 5;
     
     // str and buffer initializations
     initialize_string(sh->wdir, 0, sizeof(sh->wdir));
