@@ -93,6 +93,8 @@ int main()
         // this should never be reached since exit is handled by setup_command_execution
         if (control == 1)
         {
+            write_history_to_file(myShell.first_entry);
+            clear_shell_history(&myShell.first_entry);
             return 0; 
         }
     }
