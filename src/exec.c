@@ -141,6 +141,7 @@ int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int
             if (str_comp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
             {
                 builtins[i].bin(instructs->args[1]);  // indicates caller that exit has been called
+                return 1;
             }
             builtins[i].bin(instructs->args[1]);
             // terminates process if called by child

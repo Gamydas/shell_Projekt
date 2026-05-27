@@ -171,6 +171,7 @@ int read_history_from_file()
         }
         // might need to remove \r\n
     } 
+    free(line);
     fclose(stream);
     return 0;
 }

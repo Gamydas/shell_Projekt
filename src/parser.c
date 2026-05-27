@@ -413,6 +413,7 @@ int parse_input(InstructList *list, char *text)
             {
                 error = SYNTAX_ERROR;
                 print_error(error, &text[pos]);
+                cleanup_instructs(&instructs);
                 return -1;
             }
             dir = REDIR_IN;
@@ -510,18 +511,8 @@ void cleanup_instruct_list(InstructList *list)
     // this frees every malloced argument token, and every conntector in the connects array
     for (int i = 0; i < list->size - 1; i++)
     {
-        for (int j = 0; j < list->instructs[i].parseamt; j++)
-        {
-            free(list->instructs[i].args[j]);
-        }
-        free(list->instructs[i].args);  // frees the ralloc block of the given args array
-        // this free all redirection targets of every instruction
-        for (int j = 0; j < list->instructs[i].rdrctns; j++)
-        {
-            free(list->instructs[i].redir[j].target);
-        }
+        cleanup_instructs(&list->instructs[i]);        
     }
-
     free(list->instructs);  // frees the instructs array
     free(list->connects);   // frees the connects array
 }

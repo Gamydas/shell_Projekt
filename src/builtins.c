@@ -5,6 +5,7 @@
 
 #include "str.h"
 #include "history.h"
+#include "parser.h"
 
 extern shHist *first_entry;
 
@@ -12,12 +13,10 @@ extern shHist *first_entry;
 /// @param text ignores everything typed after exit
 void shell_exit(char *text)
 {
+    // compiler complains about unused variables
+    if(text != NULL) printf("Why are you passing exit a parameter???\n");
     write_history_to_file();
     clear_shell_history();
-    if (text != NULL)
-	    exit(0);
-
-    exit(0);
 }
 /// @brief function to change the current working directory
 /// @param dir directory to be changed to
