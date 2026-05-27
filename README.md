@@ -20,6 +20,7 @@ Currently implemented features:
 - History via Arrow keys
 
 To do:
+- improved dispatching/calling of builtins
 - implementing signalhandling via syscall sigaction for certain signals
 - Proper window control, more in Known Problems
 
