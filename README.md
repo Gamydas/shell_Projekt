@@ -8,6 +8,7 @@ Besides this AI has only been used for:
 AI is a tool not something to replace real work with. 
 
 
+
 This is my attempt at a UNIX-Shell written in C. This is a learning project to deepen my understanding of the C language and learn new concepts like process creation and management and file descriptors. This shell implements a variety of things such as the use of terminal raw mode for live input reading, a state-machine parser for quoting recognition and a separate execution logic that handles general instruction execution and instruction specifics like pipelining, sequential instructions via ; or redirections. This project does not use preexisting shell libraries.
 
 Installation: 
