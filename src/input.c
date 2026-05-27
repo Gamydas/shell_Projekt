@@ -223,6 +223,12 @@ int get_input(shell* sh, rawInput* cmd_)
                 }
                 // appends current input into history
                 shHist_modify(cmd_->cmd, cur_ID);
+
+                // this is to avoid multiple entries of the same kind being added into the bash history
+                if (str_comp(cmd_->cmd, find_in_history(cur_ID-1)->entry) == 0)
+                {
+                    delete_from_history(cur_ID);
+                }
                 // positions history Index after the newest command
                 sh->histpos = last_entry->entry_ID + 1;
                 cleanup_tab_struct(&tab);  // avoid memory leaks
