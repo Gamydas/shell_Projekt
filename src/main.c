@@ -22,7 +22,7 @@ int main()
     InstructList instructions;
     init_shell(&myShell);
     read_history_from_file();
-    if(last_entry != NULL) myShell.histpos = last_entry->entry_ID;
+    if(last_entry != NULL) myShell.histpos = last_entry->entry_ID + 1;
     // initialize functiontable
     Builtin builtins[] = 
     {

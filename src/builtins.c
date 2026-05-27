@@ -112,7 +112,7 @@ void history(char *text)
         {
             clear_shell_history();
         }
-        else if (str_comp(text, "-w"))
+        else if (str_comp(text, "-w") == 0)
         {
             write_history_to_file();
         }
