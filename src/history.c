@@ -13,7 +13,7 @@ shHist *last_entry = NULL;
 ///        caller is responsible for freeing memory
 /// @param new_entry string containing the new entry to history
 /// @param entry_size size of the new entry
-/// @return 0 on success, -1 on error
+/// @return new entries ID on success, -1 on error
 /// @author gamydas
 int create_and_append_new_hist_entry(char *new_entry, uint16_t entry_size)
 {
@@ -41,14 +41,14 @@ int create_and_append_new_hist_entry(char *new_entry, uint16_t entry_size)
         last_entry = new;
         new->entry_ID = 1;
         new->prev = NULL;
-        return 0;
+        return new->entry_ID;
     } 
     // list is not empty
     new->entry_ID = last_entry->entry_ID + 1;
     last_entry->next = new;
     new->prev = last_entry;
     last_entry = new;
-    return 0;
+    return new->entry_ID;
 }
 
 /// @brief searches through history for the entry with the specified ID

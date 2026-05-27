@@ -173,8 +173,8 @@ int get_input(shell* sh, rawInput* cmd_)
     char c = '\0';
     cmd_->cursoridx = anc;            // positions cursor at the first user eligable position
     tcsetattr(0, TCSANOW, &sh->raw);  // enters raw mode
-
-
+    // creates empty entry for current command
+    int cur_ID = create_and_append_new_hist_entry("", 1);
     printf("%s: ", sh->wdir);  // display prompt
     fflush(stdout);
 
@@ -211,6 +211,7 @@ int get_input(shell* sh, rawInput* cmd_)
 
                 len = str_len(cmd_->cmd);      // readjusts str len
                 cmd_->cursoridx = len + anc;  // readjusts cursor
+                shHist_modify(cmd_->cmd, sh->histpos);
                 break;
 
             case '\n':  // user pressed enter to send their instruction
@@ -221,7 +222,7 @@ int get_input(shell* sh, rawInput* cmd_)
                     continue;
                 }
                 // appends current input into history
-                create_and_append_new_hist_entry(cmd_->cmd, str_len(cmd_->cmd));
+                shHist_modify(cmd_->cmd, cur_ID);
                 // positions history Index after the newest command
                 sh->histpos = last_entry->entry_ID + 1;
                 cleanup_tab_struct(&tab);  // avoid memory leaks
@@ -243,7 +244,7 @@ int get_input(shell* sh, rawInput* cmd_)
                     len--;
                     cmd_->cursoridx--;
                     delete_in_string(cmd_->cmd, cmd_->cursoridx - anc);  // removes item in string
-
+                    shHist_modify(cmd_->cmd, sh->histpos);
                     // refreshes the screen
                     printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                     fflush(stdout);
@@ -282,6 +283,9 @@ int get_input(shell* sh, rawInput* cmd_)
                     {
                         perror("malloc");
                         tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
+                        // cleans up unfinished command from history in case of error
+                        // to avoid it from going into history_file on program closure
+                        delete_from_history(cur_ID);
                         return -1;
                     }
 
@@ -307,7 +311,7 @@ int get_input(shell* sh, rawInput* cmd_)
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
                 reposition_cursor(cmd_->cursoridx);
-
+                shHist_modify(cmd_->cmd, sh->histpos);
                 cleanup_tab_struct(&tab);  // avoid memory leaks
                 break;
         }
