@@ -14,7 +14,7 @@ extern shHist *first_entry;
 void shell_exit(char *text)
 {
     // compiler complains about unused variables
-    if(text != NULL) printf("Why are you passing exit a parameter???\n");
+    if (text != NULL) printf("Why are you passing exit a parameter???\n");
     write_history_to_file();
     clear_shell_history();
 }
@@ -54,8 +54,8 @@ void pwd(char *flags)
 {
     if (flags != NULL)
     {
-         fprintf(stderr, "unknown flag:%s \n", flags);
-	 return;
+        fprintf(stderr, "unknown flag:%s \n", flags);
+        return;
     }
     char temp[2048];
     printf("%s\n", getcwd(temp, 2048));
@@ -99,19 +99,22 @@ void type(char *text)
 /// @brief builtin to display the command history and manipulate it with flags
 ///        currently implemented flags: -c  -  clears the entire history file
 ///                                     -w  -  writes the entire shell history to the history file
-/// @param text 
+/// @param text
 void history(char *text)
 {
     if (text == NULL)
     {
         print_history();
-    }
-    // clear flag
-    if (str_comp(text, "-c") == 0)
+    } else
     {
-        clear_shell_history();
-    } else if (str_comp(text, "-w"))
-    {
-        write_history_to_file();
+        // clear flag
+        if (str_comp(text, "-c") == 0)
+        {
+            clear_shell_history();
+        }
+        else if (str_comp(text, "-w"))
+        {
+            write_history_to_file();
+        }
     }
 }
