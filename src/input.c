@@ -42,6 +42,7 @@ void free_rawinput(rawInput* input)
 /// @return 0 if success, -1 if an error occured
 int handle_arrows(shell* sh, rawInput* cmd_)
 {
+    int cntrl = 0;
     char c = '\0';
     int rd = read(0, &c, 1);
     if (rd < 0)  // checks failed read
@@ -81,7 +82,9 @@ int handle_arrows(shell* sh, rawInput* cmd_)
                     fflush(stdout);
                     break;
                 } /* checks if oldest command has been reached*/
-                
+                // stores current input in history
+                cntrl = shHist_modify(cmd_->cmd, sh->histpos);
+                if (cntrl < 0) return -1;
                 // repositioning history Index
                 sh->histpos--;
                 // copying stored instruction into current input 
@@ -97,6 +100,10 @@ int handle_arrows(shell* sh, rawInput* cmd_)
                     fflush(stdout);
                     break;
                 } 
+
+                // stores current input in history
+                cntrl = shHist_modify(cmd_->cmd, sh->histpos);
+                if (cntrl < 0) return -1;
                 // repositioning cursoridx
                 sh->histpos++;
                 // copying stored instruction into current input 

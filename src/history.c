@@ -86,7 +86,7 @@ shHist *find_in_history(uint16_t entry_ID)
     return temp;
 }
 
-/// @brief removes a shHist struct from the
+/// @brief removes a shHist struct from the global linked list
 /// @param entry_ID
 void delete_from_history(uint16_t entry_ID)
 {
@@ -240,4 +240,19 @@ void clear_shell_history()
     free_history_entry(first_entry); 
     first_entry = NULL;
     last_entry = NULL;
+}
+
+/// @brief modifies an item of the shHist dlinked lisit
+/// @param new_entry new entry to be written in the given entry_ID
+/// @param entry_ID ID of entry that is to be changed
+/// @return 0 on success, -1 if error occured
+int shHist_modify(char* new_entry, uint16_t entry_ID)
+{
+    shHist *temp = find_in_history(entry_ID);
+    if (temp == NULL)
+    {
+        return -1;
+    }
+    free(temp->entry);
+    return alloc_str_copy(new_entry, &temp->entry, str_len(new_entry));
 }

@@ -23,7 +23,7 @@ int read_history_from_file();
 int write_history_to_file();
 void print_history();
 void clear_shell_history();
-
+int shHist_modify(char* new_entry, uint16_t entry_ID);
 
 
 
