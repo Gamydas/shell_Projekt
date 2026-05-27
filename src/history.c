@@ -55,7 +55,7 @@ shHist *shHist_create_and_append(shHist **first_entry, shHist **last_entry, char
 /// @return pointer to struct with the entry_ID or NULL if no entry has that ID
 shHist *find_in_history(shHist **first_entry, shHist **last_entry, uint16_t entry_ID)
 {
-    if (last_entry == NULL)
+    if (*last_entry == NULL)
     {
         print_error(INVALID_ARGUMENT, "history is empty");
         return NULL;
@@ -142,7 +142,7 @@ void shHist_free(shHist *entry)
 /// @param first_entry pointer to first item in linked list
 /// @param last_entry pointer to last item in linked list
 /// @return 0 on success, -1 on failure
-int read_history_from_file(shHist *first_entry, shHist *last_entry)
+int read_history_from_file(shHist **first_entry, shHist **last_entry)
 {
     // fetches path to home directory
     char *home = getenv("HOME");
@@ -165,9 +165,9 @@ int read_history_from_file(shHist *first_entry, shHist *last_entry)
 
     // clears current history incase its not 0 to avoid colissions or
     // duplicate entries
-    if (first_entry != NULL)
+    if (*first_entry != NULL)
     {
-        clear_shell_history(&first_entry);
+        clear_shell_history(first_entry, last_entry);
     }
 
     // size of line has to be increased eventually, this is just for testing
@@ -178,7 +178,7 @@ int read_history_from_file(shHist *first_entry, shHist *last_entry)
         cut_character_from_end(line, '\n', str_len(line));
         cut_character_from_end(line, '\r', str_len(line));
         // this might cause problems cause of 128/lengthchecks
-        if (shHist_create_and_append(&first_entry, &last_entry, line, 1024) == NULL)
+        if (shHist_create_and_append(first_entry, last_entry, line, 1024) == NULL)
         {
             print_error(INITIALIZATION_ERROR, "create history entry");
             return -1;
@@ -244,7 +244,7 @@ void print_history(shHist *first_entry)
 /// @brief clears the entire shells history and frees all allocated memeory
 ///        caller file needs to include the global first_entry variable
 /// @param first_entry pointer to first item in linked list
-void clear_shell_history(shHist **first_entry)
+void clear_shell_history(shHist **first_entry, shHist **last_entry)
 {
     shHist *temp = NULL;
     if (*first_entry != NULL) temp = (*first_entry)->next;
@@ -256,7 +256,7 @@ void clear_shell_history(shHist **first_entry)
     }
     shHist_free(*first_entry);
     *first_entry = NULL;
-    // last_entry = NULL;
+    *last_entry = NULL;
 }
 
 /// @brief modifies an item of the shHist dlinked lisit
