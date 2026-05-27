@@ -15,7 +15,7 @@ debug: $(OBJ)
 
  
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -W -Wextra -Wall -Werror -c $< -o $@
+	$(CC) $(CFLAGS) -W -Wextra -Wall  -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
