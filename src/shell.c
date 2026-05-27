@@ -6,9 +6,12 @@
 void init_shell(shell* sh)
 {
     // integer intitializations
-    sh->histpos = 0;
-    sh->binamt = 5;
+    sh->binamt     = 4;
     
+    sh->first_entry = NULL;
+    sh->last_entry  = NULL;
+    sh->current     = NULL;    
+
     // str and buffer initializations
     initialize_string(sh->wdir, 0, sizeof(sh->wdir));
     for (int i = 0; i < 50; i++)

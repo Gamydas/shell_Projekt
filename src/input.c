@@ -10,8 +10,7 @@
 #include "tab.h"
 #include "history.h"
 
-extern shHist *first_entry;
-extern shHist *last_entry;
+
 
 /// @brief initializes struct of rawInput type
 /// @param input
@@ -75,26 +74,27 @@ int handle_arrows(shell *sh, rawInput *cmd_)
         switch (c)
         {
         case 'A':  // arrow up
-            // ID of oldest entry & check for empty hist
-            if (sh->histpos <= 1)
+            // check for empty history or current entry being the first in list
+            if (sh->current == NULL || sh->current->prev == NULL)
             {
                 printf("\a");
                 fflush(stdout);
                 break;
             } /* checks if oldest command has been reached*/
             // stores current input in history
-            cntrl = shHist_modify(cmd_->cmd, sh->histpos);
+            cntrl = shHist_modify(sh->current, cmd_->cmd);
             if (cntrl < 0) return -1;
-            // repositioning history Index
-            sh->histpos--;
+            // fetching previous history entry
+            sh->current = sh->current->prev;
             // copying stored instruction into current input
-            str_copy(find_in_history(sh->histpos)->entry, cmd_->cmd);
+            str_copy(sh->current->entry, cmd_->cmd);
             // repositioning cursoridx
             cmd_->cursoridx = str_len(cmd_->cmd) + str_len(sh->wdir) + 2;
             break;
 
         case 'B':  // arrow down
-            if (last_entry == NULL || sh->histpos >= last_entry->entry_ID)
+            // either history is empty or last entry is already reached
+            if (sh->current == NULL || sh->current->next == NULL)
             {
                 printf("\a");
                 fflush(stdout);
@@ -102,12 +102,12 @@ int handle_arrows(shell *sh, rawInput *cmd_)
             }
 
             // stores current input in history
-            cntrl = shHist_modify(cmd_->cmd, sh->histpos);
+            cntrl = shHist_modify(sh->current, cmd_->cmd);
             if (cntrl < 0) return -1;
             // repositioning cursoridx
-            sh->histpos++;
+            sh->current = sh->current->next;
             // copying stored instruction into current input
-            str_copy(find_in_history(sh->histpos)->entry, cmd_->cmd);
+            str_copy(sh->current->entry, cmd_->cmd);
             // repositioning cursoridx
             cmd_->cursoridx = str_len(cmd_->cmd) + str_len(sh->wdir) + 2;
             break;
@@ -174,7 +174,9 @@ int get_input(shell *sh, rawInput *cmd_)
     cmd_->cursoridx = anc;            // positions cursor at the first user eligable position
     tcsetattr(0, TCSANOW, &sh->raw);  // enters raw mode
     // creates empty entry for current command
-    int cur_ID = create_and_append_new_hist_entry("", 1);
+    shHist *newest_entry = shHist_create_and_append(&sh->first_entry, &sh->last_entry, "", 1);
+    // currents start off on newest_entry entry
+    sh->current = newest_entry;
     printf("%s: ", sh->wdir);  // display prompt
     fflush(stdout);
 
@@ -211,7 +213,7 @@ int get_input(shell *sh, rawInput *cmd_)
 
             len = str_len(cmd_->cmd);     // readjusts str len
             cmd_->cursoridx = len + anc;  // readjusts cursor
-            shHist_modify(cmd_->cmd, sh->histpos);
+            shHist_modify(sh->current, cmd_->cmd);
             break;
 
         case '\n':  // user pressed enter to send their instruction
@@ -221,26 +223,23 @@ int get_input(shell *sh, rawInput *cmd_)
                 fflush(stdout);
                 continue;
             }
-            // appends current input into history
-            shHist_modify(cmd_->cmd, cur_ID);
+            // writes the current command in the newest_entry history position
+            shHist_modify(newest_entry, cmd_->cmd);
             // to avoid exit being written to the history file
             if(str_comp(cmd_->cmd, "exit") == 0)
             {
-                delete_from_history(cur_ID);
-                cur_ID = 0;
+                shHist_delete(&sh->first_entry, &sh->last_entry, &newest_entry);
             }
-            // only check for duplicates if there is even a single other entry in history
-            if (cur_ID > 1)
+            // only check for duplicates if there is even a single prior entry in history
+            if (newest_entry != NULL && newest_entry->prev != NULL)
             {
                 // this is to avoid multiple entries of the same kind being added into the bash history
-                if (str_comp(cmd_->cmd, find_in_history(cur_ID - 1)->entry) == 0)
+                if (str_comp(cmd_->cmd, newest_entry->prev->entry) == 0)
                 {
-                    delete_from_history(cur_ID);
+                    shHist_delete(&sh->first_entry, &sh->last_entry, &newest_entry);
                 }
             }
 
-            // positions history Index after the newest command
-            sh->histpos = last_entry->entry_ID + 1;
             cleanup_tab_struct(&tab);  // avoid memory leaks
             printf("\r\n");
             fflush(stdout);
@@ -260,7 +259,7 @@ int get_input(shell *sh, rawInput *cmd_)
                 len--;
                 cmd_->cursoridx--;
                 delete_in_string(cmd_->cmd, cmd_->cursoridx - anc);  // removes item in string
-                shHist_modify(cmd_->cmd, sh->histpos);
+                shHist_modify(sh->current, cmd_->cmd);
                 // refreshes the screen
                 printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
                 fflush(stdout);
@@ -301,7 +300,7 @@ int get_input(shell *sh, rawInput *cmd_)
                     tcsetattr(0, TCSANOW, &sh->canon);  // return to canon mode
                     // cleans up unfinished command from history in case of error
                     // to avoid it from going into history_file on program closure
-                    delete_from_history(cur_ID);
+                    shHist_delete(&sh->first_entry, &sh->last_entry, &newest_entry);
                     return -1;
                 }
 
@@ -327,7 +326,7 @@ int get_input(shell *sh, rawInput *cmd_)
             printf("\r\033[K%s: %s", sh->wdir, cmd_->cmd);
             fflush(stdout);
             reposition_cursor(cmd_->cursoridx);
-            shHist_modify(cmd_->cmd, sh->histpos);
+            shHist_modify(sh->current, cmd_->cmd);
             cleanup_tab_struct(&tab);  // avoid memory leaks
             break;
         }

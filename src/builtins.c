@@ -7,7 +7,7 @@
 #include "history.h"
 #include "parser.h"
 
-extern shHist *first_entry;
+
 
 /// @brief kills calling process
 /// @param text ignores everything typed after exit
@@ -15,8 +15,10 @@ void shell_exit(char *text)
 {
     // compiler complains about unused variables
     if (text != NULL) printf("Why are you passing exit a parameter???\n");
+    /*
     write_history_to_file();
     clear_shell_history();
+    */
 }
 /// @brief function to change the current working directory
 /// @param dir directory to be changed to
@@ -96,6 +98,7 @@ void type(char *text)
     }
 }
 
+/*
 /// @brief builtin to display the command history and manipulate it with flags
 ///        currently implemented flags: -c  -  clears the entire history file
 ///                                     -w  -  writes the entire shell history to the history file
@@ -118,3 +121,4 @@ void history(char *text)
         }
     }
 }
+*/

@@ -21,8 +21,7 @@ int main()
     rawInput userInput;
     InstructList instructions;
     init_shell(&myShell);
-    read_history_from_file();
-    if(last_entry != NULL) myShell.histpos = last_entry->entry_ID + 1;
+    read_history_from_file(myShell.first_entry, myShell.last_entry);
     // initialize functiontable
     Builtin builtins[] = 
     {
@@ -30,7 +29,7 @@ int main()
         {"cd", cd},
         {"type", type},
         {"pwd", pwd},
-        {"history", history},
+        //{"history", history},
         {NULL, NULL}
     };
     // assign functiontable
