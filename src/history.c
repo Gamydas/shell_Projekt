@@ -114,18 +114,21 @@ void shHist_delete(shHist **first_entry, shHist **last_entry, shHist **discarded
         *first_entry = (*discarded)->next;
         (*first_entry)->prev = NULL;
         shHist_free(*discarded);
+        *discarded = NULL;
     }  // discarded item is last_entry in list
     else if ((*discarded)->next == NULL)
     {
         *last_entry = (*discarded)->prev;
         (*last_entry)->next = NULL;
         shHist_free(*discarded);
+        *discarded = NULL;
     }
     else
     {
         (*discarded)->prev->next = (*discarded)->next;
         (*discarded)->next->prev = (*discarded)->prev;
         shHist_free(*discarded);
+        *discarded = NULL;
     }
 }
 
