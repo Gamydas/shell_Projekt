@@ -13,7 +13,7 @@
 
 /// @brief checks for the pipe instruction via "|" and handles it via fork/exec
 /// @param sh
-/// @return returns 0 if a pipeline happend, and -1 if not
+/// @return returns position in pipeline, -1 if error occured
 int setup_pipes(Instructions *instruct, int size)
 {
     int pipes[size][2];  // these will be the I/O pipes for the pipeline
