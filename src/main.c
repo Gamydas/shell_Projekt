@@ -21,19 +21,7 @@ int main()
     rawInput userInput;
     InstructList instructions;
     init_shell(&myShell);
-    read_history_from_file(myShell.first_entry, myShell.last_entry);
-    // initialize functiontable
-    Builtin builtins[] = 
-    {
-        {"exit", shell_exit},
-        {"cd", cd},
-        {"type", type},
-        {"pwd", pwd},
-        //{"history", history},
-        {NULL, NULL}
-    };
-    // assign functiontable
-    myShell.bins = builtins;
+    read_history_from_file(&myShell.first_entry, &myShell.last_entry);
     
 
     CLEAR;
@@ -88,7 +76,7 @@ int main()
             continue;
         }
 
-        control = setup_command_execution(&instructions, myShell.bins, myShell.binamt);
+        control = setup_command_execution(&instructions, &myShell);
         cleanup_instruct_list(&instructions);
         // this should never be reached since exit is handled by setup_command_execution
         if (control == 1)
