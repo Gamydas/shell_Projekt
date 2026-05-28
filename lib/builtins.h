@@ -5,7 +5,7 @@
 typedef struct shell shell;
 typedef int (*BinFn) (char**, shell*); // function pointer to a char* taking function
 // functiontable, for cleaner execution
-typedef struct 
+typedef struct Builtin
 {
     char *name;
     BinFn bin;
@@ -18,12 +18,11 @@ typedef struct bin_Hashmap
 } bin_Hashmap;
 
 
-void shell_exit(char** dir, shell*);
-void cd(char** dir, shell*);
-void pwd(char** flags, shell*);
-void type(char** text, shell*);
-void echo(char** text, shell*);
-//void history(char *text);
+int shell_exit(char** dir, shell*);
+int cd(char** dir, shell*);
+int pwd(char** flags, shell*);
+int type(char** text, shell*);
+int history(char **text, shell*);
 
 void hashmap_populate(bin_Hashmap *map, int map_size, Builtin *table);
 int hashkey_calculate(char* string, int modulo_param);

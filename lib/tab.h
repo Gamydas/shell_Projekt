@@ -2,7 +2,7 @@
 #ifndef TAB_H
 #define TAB_H
 
-
+typedef struct Builtin Builtin;
 typedef struct tabComp
 {
     int tabs; // amount of tabs used

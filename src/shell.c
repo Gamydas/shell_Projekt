@@ -21,7 +21,7 @@ void init_shell(shell* sh)
         {"cd", cd},
         {"type", type},
         {"pwd", pwd},
-        //{"history", history},
+        {"history", history},
         {NULL, NULL}
     };
     sh->bins = builtins;
