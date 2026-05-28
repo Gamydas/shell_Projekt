@@ -23,6 +23,7 @@ int main()
     init_shell(&myShell);
     read_history_from_file(&myShell.first_entry, &myShell.last_entry);
     
+    
 
     CLEAR;
     HOME;
@@ -81,6 +82,7 @@ int main()
         // this should never be reached since exit is handled by setup_command_execution
         if (control == 1)
         {
+            free(myShell.bins);
             write_history_to_file(myShell.first_entry);
             clear_shell_history(&myShell.first_entry, &myShell.last_entry);
             return 0; 
