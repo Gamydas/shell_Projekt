@@ -14,6 +14,7 @@ typedef struct Builtin
 
 typedef struct bin_Hashmap
 {
+    char *name;
     BinFn builtin;
 } bin_Hashmap;
 

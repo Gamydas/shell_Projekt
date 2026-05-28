@@ -165,8 +165,9 @@ void hashmap_populate(bin_Hashmap *map, int map_size, Builtin *table)
 {
     while (table->name != NULL)
     {
-        
-        map[hashkey_calculate(table->name, map_size)].builtin = table->bin;
+        int slot = hashkey_calculate(table->name, map_size);
+        map[slot].name    = table->name;
+        map[slot].builtin = table->bin;
         table++;
     }
 }
@@ -178,8 +179,10 @@ void hashmap_populate(bin_Hashmap *map, int map_size, Builtin *table)
 /// @return pointer to function if name is valid, NULL if it is not
 BinFn hashmap_poll(bin_Hashmap *map, int map_size, char *function)
 {
-    BinFn funct = map[hashkey_calculate(function, map_size)].builtin;
-    return (funct != NULL) ? funct : NULL;
+    int slot = hashkey_calculate(function, map_size);
+    if (map[slot].name != NULL && str_comp(map[slot].name, function) == 0)
+        return map[slot].builtin;
+    return NULL;
 }
 
 /// @brief sets contents of all map nodes to 0
@@ -189,6 +192,7 @@ void hashmap_initialize(bin_Hashmap *map, int map_size)
 {
     for (int i = 0; i < map_size; i++)
     {
+        map[i].name    = NULL;
         map[i].builtin = NULL;
     }
 }
