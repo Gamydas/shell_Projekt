@@ -174,11 +174,12 @@ int read_history_from_file(shHist **first_entry, shHist **last_entry)
     char *line = malloc(1024);
     while (fgets(line, 1024, stream) != NULL)
     {
+        int len = str_len(line);
         // removing potential white spaces from the end of the line that cause parsing errors
-        cut_character_from_end(line, '\n', str_len(line));
-        cut_character_from_end(line, '\r', str_len(line));
+        cut_character_from_end(line, '\n', len);
+        cut_character_from_end(line, '\r', len);
         // this might cause problems cause of 128/lengthchecks
-        if (shHist_create_and_append(first_entry, last_entry, line, 1024) == NULL)
+        if (shHist_create_and_append(first_entry, last_entry, line, len) == NULL)
         {
             print_error(INITIALIZATION_ERROR, "create history entry");
             return -1;
