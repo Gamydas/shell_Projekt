@@ -19,7 +19,7 @@ typedef struct shell
     // did some testing, 50 as size of map avoids any collisions,
     // however should colissions arise with more builtins, simple increase size
     bin_Hashmap builtins[50];
-    Builtin *bins;  // always make this 1 larger than binamt for Sentinel
+    Builtin *bins;  
     struct termios canon;
     struct termios raw;
 
