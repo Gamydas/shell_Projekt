@@ -15,12 +15,12 @@ Installation:
 - if you have downloaded all projectfiles including the makefile you can simply run make all and from then on ./shell to start up the shell
 - if you wish to run the shell with the GDB debugger simply run make clean, then make shell_debug and finally gdb ./shell_debug
 
-Currently implemented commands: 
+Currently implemented builtins: 
 - cd
 - pwd
 - echo (this actually uses linux executable)
-- type 
-- linux executables
+- type
+- history
 
 Currently implemented features:
 - Redirections
@@ -31,7 +31,6 @@ Currently implemented features:
 - History via Arrow keys
 
 To do:
-- improved dispatching/calling of builtins
 - implementing signalhandling via syscall sigaction for certain signals
 - Proper window control, more in Known Problems
 
