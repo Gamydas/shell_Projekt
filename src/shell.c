@@ -5,25 +5,30 @@
 /// @param sh 
 void init_shell(shell* sh)
 {
-    // integer intitializations
-    sh->binamt     = 4;
-    
+   
+    // history initializations
     sh->first_entry = NULL;
     sh->last_entry  = NULL;
     sh->current     = NULL;    
 
     // str and buffer initializations
     initialize_string(sh->wdir, 0, sizeof(sh->wdir));
-    for (int i = 0; i < 50; i++)
-    {
-        initialize_string(sh->builtins[i],0, sizeof(sh->builtins[0]));
-    }
 
-    // entering all currently existing builtins into the array
-    str_copy("exit", sh->builtins[0]);
-    str_copy("cd", sh->builtins[1]);
-    str_copy("type", sh->builtins[2]);
-    str_copy("pwd", sh->builtins[3]);
+    // initialize functiontable
+    Builtin builtins[] = 
+    {
+        {"exit", shell_exit},
+        {"cd", cd},
+        {"type", type},
+        {"pwd", pwd},
+        //{"history", history},
+        {NULL, NULL}
+    };
+    sh->bins = builtins;
+
+    // initializing and populating hashtable
+    hashmap_initialize(sh->builtins, 50);
+    hashmap_populate(sh->builtins, 50, sh->bins);
     
     // termios initialization
     tcgetattr(0, &sh->canon);
