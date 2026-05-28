@@ -2,6 +2,7 @@
 #ifndef TAB_H
 #define TAB_H
 
+
 typedef struct tabComp
 {
     int tabs; // amount of tabs used
@@ -12,8 +13,8 @@ typedef struct tabComp
 } tabComp;
 
 int initialize_tab_struct(tabComp* tab);
-int tab_completion(tabComp *tab, char (*builtins)[10], int binamt, char *command, char *path);
-int complete_builtins(tabComp *tab, char* token, char (*builtins)[10], int binamt);
+int tab_completion(tabComp *tab, Builtin *table, char *command, char *path);
+int complete_builtins(tabComp *tab, char* token, Builtin* table);
 int complete_arguments(tabComp *tab, char *token, char *path, int isExec);
 int complete_executables(tabComp *tab, char *token);
 void handle_tab_cases(tabComp *tab, char* token);

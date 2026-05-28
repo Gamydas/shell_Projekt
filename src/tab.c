@@ -1,9 +1,8 @@
-#include "tab.h"
-
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "tab.h"
 #include "shell.h"
 #include "str.h"
 
@@ -55,14 +54,14 @@ void cleanup_tab_struct(tabComp* tab)
 /// @param builtins array of builtins for shell
 /// @param binamt amount of builtins shell currently has
 /// @return 0 if everythin was succesfull, -1 if error occured
-int complete_builtins(tabComp* tab, char* token, char (*builtins)[10], int binamt)
+int complete_builtins(tabComp* tab, char* token, Builtin *table)
 {
     // iterates over builtins array and saves matches to tab->matches
-    for (int i = 0; i < binamt; i++)  
+    while(table->name != NULL)  
     {
-        if (str_comp(token, builtins[i]) != -1)
+        if (str_comp(token, table->name) != -1)
         {
-            int temp = str_len(builtins[i]);
+            int temp = str_len(table->name);
             // checks if capacity needs to be increased
             if (tab->matchcount == tab->capac - 1)  // -1 because of sentinel slot
             {
@@ -79,7 +78,7 @@ int complete_builtins(tabComp* tab, char* token, char (*builtins)[10], int binam
                 perror("malloc");
                 return -1;
             }
-            str_copy(builtins[i], tab->matches[tab->matchcount]);
+            str_copy(table->name, tab->matches[tab->matchcount]);
             tab->matches[tab->matchcount][temp] = 32;
             tab->matches[tab->matchcount][temp + 1] = '\0';
             tab->matchcount++;
@@ -290,7 +289,7 @@ void handle_tab_cases(tabComp* tab, char* token)
 /// @param command given command string, yet untokinzed
 /// @param path 
 /// @return 0 if success, -1 if an error occured
-int tab_completion(tabComp* tab, char (*builtins)[10], int binamt, char* command, char* path)
+int tab_completion(tabComp* tab, Builtin *table, char* command, char* path)
 {
     if (tab->tabs > 1)
     {
@@ -319,7 +318,7 @@ int tab_completion(tabComp* tab, char (*builtins)[10], int binamt, char* command
         {
             count++;
         }  // clears out every seperator at the begging of the command
-        int cntrl = complete_builtins(tab, &command[count], builtins, binamt);
+        int cntrl = complete_builtins(tab, &command[count], table);
         if (cntrl < 0)
         {
             return -1;

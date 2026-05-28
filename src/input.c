@@ -202,7 +202,7 @@ int get_input(shell *sh, rawInput *cmd_)
                 initialize_tab_struct(&tab);
             }
             tab.tabs++;
-            int cntrl = tab_completion(&tab, sh->builtins, sh->binamt, cmd_->cmd, sh->wdir);
+            int cntrl = tab_completion(&tab, sh->bins, cmd_->cmd, sh->wdir);
             if (cntrl < 0)
             {
                 continue;
