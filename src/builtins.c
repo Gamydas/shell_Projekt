@@ -6,12 +6,12 @@
 #include "str.h"
 #include "history.h"
 #include "parser.h"
-
+#include "shell.h"
 
 
 /// @brief kills calling process
 /// @param text ignores everything typed after exit
-void shell_exit(char *text)
+void shell_exit(char **text, shell *sh)
 {
     // compiler complains about unused variables
     if (text != NULL) printf("Why are you passing exit a parameter???\n");
@@ -22,7 +22,7 @@ void shell_exit(char *text)
 }
 /// @brief function to change the current working directory
 /// @param dir directory to be changed to
-void cd(char *dir)
+void cd(char **dir, shell *sh)
 {
     if (dir == NULL)
     {
@@ -52,7 +52,7 @@ void cd(char *dir)
 }
 
 /// @brief prints current working directory
-void pwd(char *flags)
+void pwd(char **flags, shell *sh)
 {
     if (flags != NULL)
     {
@@ -65,7 +65,7 @@ void pwd(char *flags)
 
 /// @brief prints out the given string to the terminal
 /// @param text
-void echo(char *text)
+void echo(char **text, shell *sh)
 {
     if (text != NULL)
     {
@@ -79,7 +79,7 @@ void echo(char *text)
 
 /// @brief tells user what type a command is
 /// @param text
-void type(char *text)
+void type(char **text, shell *sh)
 {
     if (text != NULL)
     {
@@ -103,7 +103,7 @@ void type(char *text)
 ///        currently implemented flags: -c  -  clears the entire history file
 ///                                     -w  -  writes the entire shell history to the history file
 /// @param text
-void history(char *text)
+void history(char **text, shell* sh)
 {
     if (text == NULL)
     {
