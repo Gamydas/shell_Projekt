@@ -5,9 +5,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "exec.h"
 #include "parser.h"
 #include "pipelining.h"
 #include "str.h"
+#include "shell.h"
 
 /// @brief this function handles the execution logic of the shell, it gets handed an InstructList
 ///        and the functiontable + its size. It checks for Connector Types and handles them
@@ -17,7 +19,7 @@
 /// @param list
 /// @param builtins
 /// @param binamt
-int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
+int setup_command_execution(InstructList *list, shell *sh)
 {
     int pipecalls = 0;
     int ID = PARENT_PROCCESS;
@@ -42,7 +44,7 @@ int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
             if (ID != PARENT_PROCCESS)  // to avoid executing commands twice
             {
                 // executes commands in the children at their approricate position i.E instructs[begin + ID]
-                cntrl = execute_commands(&list->instructs[begin + ID], builtins, binamt, ID);
+                cntrl = execute_commands(&list->instructs[begin + ID], sh, ID);
                 // execCommand terminates the children after execution, no need to do that here
                 if (cntrl < 0)
                 {
@@ -60,7 +62,7 @@ int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
         }
         else
         {
-            cntrl = execute_commands(&list->instructs[i], builtins, binamt, ID);
+            cntrl = execute_commands(&list->instructs[i], sh, ID);
             if (cntrl < 0)
             {
                 return -1;  // caller handles cleanup
@@ -85,7 +87,7 @@ int setup_command_execution(InstructList *list, Builtin *builtins, int binamt)
 /// @param binamt
 /// @param ID
 /// @return 0 if success, -1 if error, 1 if exit is called
-int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int ID)
+int execute_commands(Instructions *instructs, shell *sh, int ID)
 {
     // declerations for parent
     int out_fd = 0;
@@ -132,36 +134,35 @@ int execute_commands(Instructions *instructs, Builtin *builtins, int binamt, int
         close(in_fd);
         return 0;  // silent return to main in parent
     }
-    // checks for built ins
-    for (int i = 0; i < binamt; i++)
+    
+    BinFn temp = hashmap_poll(sh->builtins, 50, instructs->args[0]);
+    // checks if the first instruction is a built in or not
+    if (temp != NULL)
     {
-        if (str_comp(builtins[i].name, instructs->args[0]) == 0)
+        // executes builtin
+        temp(&instructs->args[1], sh);
+        
+        // signals caller that user called exit 
+        if (str_comp(instructs->args[0], "exit") == 0) return 1;
+
+        // terminates process if called by child
+        if (ID != PARENT_PROCCESS)
         {
-            // only for the parent, i.e the actual shell process
-            if (str_comp(builtins[i].name, "exit") == 0 && ID == PARENT_PROCCESS)
-            {
-                builtins[i].bin(instructs->args[1]);  // indicates caller that exit has been called
-                return 1;
-            }
-            builtins[i].bin(instructs->args[1]);
-            // terminates process if called by child
-            if (ID != PARENT_PROCCESS)
-            {
-                exit(0);
-            }
-            else
-            {
-                // restoring original fds after a builtin
-                dup2(out_fd, STDOUT_FILENO);
-                close(out_fd);
-                dup2(err_fd, STDERR_FILENO);
-                close(err_fd);
-                dup2(in_fd, STDIN_FILENO);
-                close(in_fd);
-                return 0;
-            }
+            exit(0);
+        }
+        else
+        {
+            // restoring original fds after a builtin
+            dup2(out_fd, STDOUT_FILENO);
+            close(out_fd);
+            dup2(err_fd, STDERR_FILENO);
+            close(err_fd);
+            dup2(in_fd, STDIN_FILENO);
+            close(in_fd);
+            return 0;
         }
     }
+
     // if this was called by a child e.g a pipe segment there is no need to create new children
     if (ID != PARENT_PROCCESS)
     {
