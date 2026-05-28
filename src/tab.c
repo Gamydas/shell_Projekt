@@ -83,6 +83,7 @@ int complete_builtins(tabComp* tab, char* token, Builtin *table)
             tab->matches[tab->matchcount][temp + 1] = '\0';
             tab->matchcount++;
         }
+        table++;
     }
     return 0;
     //handle_tab_cases(tab, token);
