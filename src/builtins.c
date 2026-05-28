@@ -27,11 +27,12 @@ int shell_exit(char **text, shell *sh)
 int cd(char **dir, shell *sh)
 {
     (void)sh;
+    char *home_if_no_args = NULL;
     // empty argument
     if (*dir == NULL)
     {
-        *dir = getenv("HOME");
-        if (*dir == NULL)
+        home_if_no_args = getenv("HOME");
+        if (home_if_no_args == NULL)
         {
             fprintf(stderr, "failed to fetch path to home directory\n");
 
@@ -40,16 +41,19 @@ int cd(char **dir, shell *sh)
     }
     else if (str_comp(*dir, "~") == 0)
     {
-        *dir = getenv("HOME");
-        if (*dir == NULL)
+        home_if_no_args = getenv("HOME");
+        if (home_if_no_args== NULL)
         {
             fprintf(stderr, "failed to fetch path to home directory\n");
 
             return -2;
         }
     }
-    // if chdir failed i.e dir doesnt exist
-    if (chdir(*dir) == -1)
+    if (home_if_no_args != NULL)
+    {
+        // no return handling as validity of $HOME as been ensured above
+        chdir(home_if_no_args);
+    } else if (chdir(*dir) == -1) // checks if chdir failed
     {
         fprintf(stderr, "Directory does not exit.\n");
         return -1;
@@ -70,6 +74,7 @@ int pwd(char **flags, shell *sh)
         {
             flag = 1;
         }
+        flags++;
     }
     if (flag == -1)
     {
