@@ -100,7 +100,18 @@ int add_segment(InstructList *list, Instructions *instructs, CONNECTOR connect)
 
 int handle_connectors(Instructions *instructs, InstructList *list, CONNECTOR connect)
 {
-    instructs->parseamt++;                        // parseamt can never reach capac before this, so no realloc check needed, just place sentinel
+    // it turns out parseamt can in fact hit capac before this so we need to reallocate some memory
+    if (instructs->parseamt >= instructs->capac - 1)
+    {
+        int cntrl = increase_capacity(&instructs->args, &instructs->capac, instructs->capac);
+        if (cntrl < 0)
+        {
+            return -1;  // caller responsible for cleanup
+        }
+    }
+    instructs->args[instructs->parseamt] = NULL;
+    instructs->parseamt++;
+
     instructs->args[instructs->parseamt] = NULL;  // NULL sentinel
     int cntrl = add_segment(list, instructs, connect);
     if (cntrl < 0)
@@ -151,12 +162,17 @@ int handle_seperators(Instructions *instruct, char *token, char *text, int *idx,
     // checks if redirection targets need to be set
     if (*type != NO_REDIR && *type != END_NEXT)
     {
+        if (instruct->rdrctns >= 10)
+        {
+            print_error(SYNTAX_ERROR, token);
+            return -1;
+        }
         instruct->redir[instruct->rdrctns].direction = *type;  // saves redirect type
         *type = END_NEXT;                                      // indicates that next token is target
         // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
         // idx is already 0 so no need to reset it here
         initialize_string(token, 0, str_len(token));  // clears token to avoid wrong reads
-        return 0;                          // need to return so the redir operator doesnt get tokenized
+        return 0;                                     // need to return so the redir operator doesnt get tokenized
     }
     else if (*type == END_NEXT)
     {
@@ -170,7 +186,7 @@ int handle_seperators(Instructions *instruct, char *token, char *text, int *idx,
         // Do not increase pos here, already happend in the first while, pos already points to the next tokens beginning
         // idx is already 0 so no need to reset it here
         initialize_string(token, 0, str_len(token));  // clears token to avoid wrong reads
-        *type = NO_REDIR;                  // resets redirection type for next redir
+        *type = NO_REDIR;                             // resets redirection type for next redir
         return 0;
     }
 
@@ -210,8 +226,9 @@ int append_to_token(Instructions *instruct, char *token, char *text, int *idx, i
         (*idx)++;
         (*pos)++;
         return 0;
-    }else if (!text[*pos]) // This got seperated so there is one total final call of this function 
-    {                      // in parser and not a bunch of different if(!text[pos]) cases
+    }
+    else if (!text[*pos])    // This got seperated so there is one total final call of this function
+    {                        // in parser and not a bunch of different if(!text[pos]) cases
         token[*idx] = '\0';  // terminates final token
         // this checks if the last token is a redirect target
         if (type == END_NEXT)
@@ -277,7 +294,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -285,7 +302,7 @@ int parse_input(InstructList *list, char *text)
             if (cntrl < 0)
             {
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                return -1;                     // error occured, message will be given by exited funct
+                return -1;                      // error occured, message will be given by exited funct
             }
             break;
         case '|':  // pipe
@@ -295,7 +312,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -312,7 +329,7 @@ int parse_input(InstructList *list, char *text)
             {
                 // error message thrown by exited funtion
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                return -1;                     // caller responsible for cleanup
+                return -1;                      // caller responsible for cleanup
             }
             idx = 0;  // a connector is the end of a token
             pos++;    // move position
@@ -325,7 +342,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -350,7 +367,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -360,13 +377,13 @@ int parse_input(InstructList *list, char *text)
 
         case 39:  // single quote
             // single quote loses its meaning in double quotes
-            if (mode == DOUBLE_QUOTES) 
+            if (mode == DOUBLE_QUOTES)
             {
                 cntrl = append_to_token(&instructs, token, text, &idx, &pos, dir);
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -381,7 +398,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -394,7 +411,7 @@ int parse_input(InstructList *list, char *text)
             else
             {
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                return -1;                     // syntax error, handled by switch_directions
+                return -1;                      // syntax error, handled by switch_directions
             }
             break;
 
@@ -405,7 +422,7 @@ int parse_input(InstructList *list, char *text)
                 if (cntrl < 0)
                 {
                     cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                    return -1;                     // error occured, message will be given by exited funct
+                    return -1;                      // error occured, message will be given by exited funct
                 }
                 break;
             }
@@ -427,9 +444,9 @@ int parse_input(InstructList *list, char *text)
             if (cntrl < 0)
             {
                 cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-                return -1;                     // error occured, message will be given by exited funct
+                return -1;                      // error occured, message will be given by exited funct
             }
-            
+
             break;
         }
     }
@@ -439,7 +456,7 @@ int parse_input(InstructList *list, char *text)
     if (cntrl < 0)
     {
         cleanup_instructs(&instructs);  // nessecary clean up as this is instruct is not part of list yet
-        return -1;                     // error occured, message will be given by exited funct
+        return -1;                      // error occured, message will be given by exited funct
     }
     cntrl = handle_connectors(&instructs, list, END);
     if (cntrl < 0)
@@ -511,7 +528,7 @@ void cleanup_instruct_list(InstructList *list)
     // this frees every malloced argument token, and every conntector in the connects array
     for (int i = 0; i < list->size - 1; i++)
     {
-        cleanup_instructs(&list->instructs[i]);        
+        cleanup_instructs(&list->instructs[i]);
     }
     free(list->instructs);  // frees the instructs array
     free(list->connects);   // frees the connects array

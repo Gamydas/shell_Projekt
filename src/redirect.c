@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "err.h"
+#include "../lib/err.h"
 #include "str.h"
 
 /// @brief  opens up filedesciptors for a given redirect object, then dup2s
